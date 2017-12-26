@@ -1,4 +1,5 @@
 from src.model import Domain, Table, Field, Index, Constraint, Schema
+from src.exceptions import ParseError
 
 __all__ = ["xml2ram"]
 
@@ -38,7 +39,7 @@ def _parseSchema(xml):
             elif name.lower() == "description":
                 schema.descr = val
             else:
-                raise ValueError("In tag \"{}\" invalid attribute name \"{}\"".format(schema.nodeName, name))
+                raise ParseError("In tag \"{}\" invalid attribute name \"{}\"".format(schema.nodeName, name),"_parseSchema")
     return schema
 
 def _parseDomains(xml):
@@ -86,7 +87,7 @@ def _parseDomains(xml):
                     elif prop == "thousands_separator":
                         domain.thousands_separator = True
                     else:
-                        raise ValueError("Invalid format of propertiess: {}".format(val))
+                        raise ParseError("Invalid format of propertiess: {}".format(val),"_parseDomains")
         list.append(domain)
     return list
 
@@ -137,13 +138,13 @@ def _parseTable(item):
                 elif prop == "delete":
                     table.delete = True
                 else:
-                    raise ValueError("Invalid format of properties: {}".format(val))
+                    raise ParseError("Invalid format of properties: {}".format(val),"_parseTable")
         elif name.lower() == "ht_table_flags":
             table.ht_table_flags = val
         elif name.lower() == "access_level":
             table.access_level = val
         else:
-            raise ValueError("In tag {} invalid attribute name \"{}\"".format(table.nodeName, name))
+            raise ParseError("In tag {} invalid attribute name \"{}\"".format(table.nodeName, name),"_parseTable")
     return table
 
 
@@ -156,7 +157,7 @@ def _parseFields(xml):
     :return:
     """
     if xml.nodeName != "table":
-        raise TypeError("Element is not a table")
+        raise ParseError("Element is not a table","_parseFields")
 
     list = []
     xml_fields = xml.getElementsByTagName("field")
@@ -187,11 +188,11 @@ def _parseFields(xml):
                     elif prop == "required":
                         field.required = True
                     else:
-                        raise ValueError("Invalid format of properties: {}".format(val))
+                        raise ParseError("Invalid format of properties: {}".format(val),"_parseFields")
             elif name.lower() == "description":
                 field.descr = val
             else:
-                raise ValueError("In tag \"{}\" invalid attribute name \"{}\"".format(field.nodeName, name))
+                raise ParseError("In tag \"{}\" invalid attribute name \"{}\"".format(field.nodeName, name),"_parseFields")
 
         list.append(field)
 
@@ -217,7 +218,7 @@ def _parseIndexes(xml):
         attributes = item.attributes.items()
         for name, val in attributes:
             if name.lower() == "field":
-                pass
+                tmp.fields.append(val)
             elif name.lower() == "props":
                 for prop in val.split(", "):
                     if prop == "fulltext":
@@ -225,9 +226,9 @@ def _parseIndexes(xml):
                     elif prop == "uniqueness":
                         tmp.uniqueness = True
                     else:
-                        raise ValueError("Invalid format of props string: {}".format(val))
+                        raise ParseError("Invalid format of props string: {}".format(val), "_parseIndexes")
             else:
-                raise ValueError("In tag \"{}\" invalid attribute name \"{}\"".format(item.nodeName, name))
+                raise ParseError("In tag \"{}\" invalid attribute name \"{}\"".format(item.nodeName, name), "_parseIndexes")
         list.append(tmp)
     return list
 
@@ -240,7 +241,7 @@ def _parseConstraints(xml):
     :return:
     """
     if xml.nodeName != "table":
-        raise TypeError("Element is not a table")
+        raise ParseError("Element is not a table","_parseConstraints")
 
     list = []
     xmlConstraints = xml.getElementsByTagName("constraint")
@@ -263,12 +264,12 @@ def _parseConstraints(xml):
                     elif prop == "full_cascading_delete":
                         constraint.full_cascading_delete = True
                     else:
-                        raise ValueError("Invalid format of props string: {}".format(val))
+                        raise ParseError("Invalid format of props string: {}".format(val),"_parseConstraints")
             elif name.lower() == "reference_type":
                 constraint.reference_type = val
             elif name.lower() == "reference":
                 constraint.reference = val
             else:
-                raise ValueError("In tag \"{}\" invalid attribute name \"{}\"".format(constraint.nodeName, name))
+                raise ParseError("In tag \"{}\" invalid attribute name \"{}\"".format(constraint.nodeName, name),"_parseConstraints")
         list.append(constraint)
     return list
