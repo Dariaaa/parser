@@ -69,11 +69,11 @@ def _parseDomains(xml):
             elif name.lower() == "precision":
                 domain.precision = val
             elif name.lower() == "char_length":
-                domain.align = val
+                domain.char_length = val
             elif name.lower() == "length":
-                domain.width = val
+                domain.length = val
             elif name.lower() == "scale":
-                domain.precision = val
+                domain.scale = val
             elif name.lower() == "props":
                 for prop in val.split(", "):
                     if prop == "show_null":

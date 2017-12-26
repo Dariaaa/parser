@@ -54,7 +54,6 @@ def create_domain(xml, domains):
             node.setAttribute("length", domain.length)
         if domain.precision is not None:
             node.setAttribute("precision", domain.precision)
-
         properties = []
         if domain.show_null:
             properties.append("show_null")

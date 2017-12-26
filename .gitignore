@@ -1,1 +1,6 @@
 .idea/
+src/__pycache__/
+src/convert/__pycache__/
+src/model/__pycache__/
+
+
