@@ -1,19 +1,14 @@
-import xml.dom.minidom as dom
-
-from src import (xml2ram,
-                 ram2xml)
-
-
-# import io
-
-#   Reading xml file using minidom
-xml = dom.parse("resources/tasks.xml")
+from src import (Parser,
+                 Converter,
+                 DBUploader)
 
 #   Parsing xml to ram
-schema = xml2ram(xml)
+schema = Parser("resources/prjadm.xdb.xml").parseXml2Ram()
 
 #   Parsing ram to xml
-xml = ram2xml(schema)
+xml = Converter().convertRam2Xml(schema)
+
+#   Upload schema to sqlite database
+dbUploader = DBUploader("test_db.db").upload(schema)
 
 
-# print(xml.toprettyxml(indent="  ", encoding="utf-8").decode("utf-8"))

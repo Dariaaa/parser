@@ -1,7 +1,7 @@
 import unittest
 import xml.dom.minidom as dom
 from codecs import open as open
-from src import xml2ram, ram2xml
+from src import Parser, Converter
 
 
 class Test(unittest.TestCase):
@@ -9,12 +9,10 @@ class Test(unittest.TestCase):
         """
             testing parsing xml -> ram -> xml
         """
-        # parsing xml
-        xml = dom.parse("resources/tasks.xml")
         # creating new schema in ram
-        schema = xml2ram(xml)
+        schema = Parser("resources/tasks.xml").parseXml2Ram()
         # create xml file from schema
-        xml = ram2xml(schema)
+        xml = Converter().convertRam2Xml(schema)
         # writing result to file tasks1.xml
         file = open('resources/tasks1.xml', 'w', "utf8")
         xml.writexml(file, indent="  ", addindent="  ", newl='\n')

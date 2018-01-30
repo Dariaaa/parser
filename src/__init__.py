@@ -1,4 +1,6 @@
-from src.convert.xml2ram import xml2ram
-from src.convert.ram2xml import ram2xml
-
-__all__ = ("xml2ram", "ram2xml")
+from src.convert.xml2ram import Parser
+from src.convert.ram2xml import Converter
+# from src.convert.ram2sqlite import ram2sqlite
+from src.convert.ram2sqlite import DBUploader
+__all__ = ("Parser", "Converter",
+           "DBUploader")
