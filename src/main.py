@@ -9,6 +9,6 @@ schema = Parser("resources/prjadm.xdb.xml").parseXml2Ram()
 xml = Converter().convertRam2Xml(schema)
 
 #   Upload schema to sqlite database
-dbUploader = DBUploader("test_db.db").upload(schema)
+dbUploader = DBUploader("resources/sql/sqlite_queries.cfg","test_db.db").upload(schema)
 
 

@@ -1,20 +1,18 @@
 from db.sqlite_ddl_init import SQL_DBD_Init
-from db.sql.sql_const import add_schema_sql
-from db.sql.sql_const import add_domains_sql
-from db.sql.sql_const import add_temp_table_sql
-from db.sql.sql_const import fill_temp_table_sql
-from db.sql.sql_const import drop_temp_table_sql
-from db.sql.sql_const import update_rel_domain_datatype
-from itertools import count
 
+import uuid
 import os
 import errno
 import sqlite3
-
+import configparser
 
 class DBUploader:
 
-    def __init__(self, db_file_name):
+    def __init__(self, config_file, db_file_name):
+
+        self.config = configparser.ConfigParser()
+        self.config.read(config_file, 'utf-8')
+
         self._drop_if_exists(db_file_name)
         self.conn = sqlite3.connect(db_file_name)
         self.cursor = self.conn.cursor()
@@ -35,7 +33,8 @@ class DBUploader:
         of domain table and datatype table
         :return:
         """
-        self.cursor.execute(add_temp_table_sql)
+        query = self.config.get('CREATE', 'temp_rel_domain_datatype')
+        self.cursor.execute(query)
 
     def add_rel_domains_datatypes(self, schema):
         """
@@ -44,7 +43,12 @@ class DBUploader:
         :param schema: Schema
         :return:
         """
-        self.cursor.executemany(fill_temp_table_sql, [(d.name, d.type) for d in schema.domains])
+        query = self.config.get('INSERT', 'add_rel_to_temp')
+        for domain in schema.domains:
+            self.cursor.execute(query, {
+                "domain_name" : domain.name,
+                "datatype_name": domain.type
+            })
 
     def add_schema(self, schema):
         """
@@ -52,7 +56,11 @@ class DBUploader:
         :param schema:
         :return:
         """
-        self.cursor.execute(add_schema_sql.format(schema.name))
+        query = self.config.get('INSERT', 'schema')
+
+        self.cursor.execute(query, {
+            "name": schema.name,
+        })
 
     def add_domains(self, schema):
         """
@@ -60,39 +68,41 @@ class DBUploader:
         :param schema: Schema
         :return:
         """
-        it = count()
-        self.cursor.executemany(add_domains_sql, [(
-                   d.name,
-                   d.descr,
-                   d.length,
-                   d.char_length,
-                   d.precision,
-                   d.scale,
-                   d.width,
-                   d.align,
-                   d.show_null,
-                   d.show_lead_nulls,
-                   d.thousands_separator,
-                   d.summable,
-                   d.case_sensitive,
-                   1,
-                   next(it)
-               ) for d in schema.domains]
-           )
+        query = self.config.get('INSERT', 'domain')
+        for domain in schema.domains:
+            self.cursor.execute(query, {
+                'name': domain.name,
+                'description': domain.descr,
+                'length': domain.length,
+                'char_length': domain.char_length,
+                'precision': domain.precision,
+                'scale': domain.scale,
+                'width': domain.width,
+                'align': domain.align,
+                'show_null': domain.show_null,
+                'show_lead_nulls': domain.show_lead_nulls,
+                'thousands_separator': domain.thousands_separator,
+                'summable': domain.summable,
+                'case_sensitive': domain.case_sensitive,
+                'data_type_id': 1,
+                'uuid': uuid.uuid1().hex
+            })
 
     def update_rel_domains_datatypes(self):
         """
         Update relationship between domain table and data type table
         :return:
         """
-        self.cursor.execute(update_rel_domain_datatype)
+        query = self.config.get('UPDATE', 'domain_datatype_rel')
+        self.cursor.execute(query)
 
     def drop_tmp(self):
         """
         Delete temp table
         :return:
         """
-        self.cursor.execute(drop_temp_table_sql)
+        query = self.config.get('DROP', 'temp')
+        self.cursor.execute(query)
 
     @staticmethod
     def _drop_if_exists(file_name: str):
