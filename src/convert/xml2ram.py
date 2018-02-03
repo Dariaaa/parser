@@ -235,7 +235,7 @@ class Parser:
 
             for detail_node in item.childNodes:
                 if detail_node.tagName != 'item':
-                    pass
+                    raise Exception()
                 detail = self._create_index_detail(detail_node._attrs)
                 tmp.details.append(detail)
             list.append(tmp)
@@ -286,7 +286,7 @@ class Parser:
 
             for detail_node in item.childNodes:
                 if detail_node.tagName != 'item':
-                    pass
+                    raise Exception()
                 detail = self._create_constraint_detail(detail_node._attrs)
                 constraint.details.append(detail)
 

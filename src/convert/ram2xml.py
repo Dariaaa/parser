@@ -184,7 +184,7 @@ class Converter:
                 node.setAttribute("props", ", ".join(properties))
 
             # for detail in constraint.details:
-            #     detail_output = self._create_constraint_detail_dom(detail)
+            #     detail_output = self._create_constraint_detail(detail)
             #     node.appendChild(detail_output)
 
             yield node
@@ -216,7 +216,7 @@ class Converter:
                 node.setAttribute('props', ', '.join(props))
 
             # for detail in index.details:
-            #     detail_output = self._create_index_detail_dom(detail)
+            #     detail_output = self._create_index_detail(detail)
             #     node.appendChild(detail_output)
             nodes.append(node)
         return nodes
