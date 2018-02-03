@@ -89,33 +89,64 @@ class DBUploader:
             })
 
     def get_result(self):
+        """
+        Get result executing query
+        :return:
+        """
         columns = [column[0] for column in self.cursor.description]
         results = []
         for row in self.cursor.fetchall():
             results.append(dict(zip(columns, row)))
         return results
 
-    def add_tables(self, schema, schema_id):
+    def add_table(self, table, schema_id):
         """
-        Add domains to database from Schema
-        :param schema: Schema
-        :param schema_id: Shema id
+        Add table to database from Table
+        :param table:
+        :param schema:
+        :param schema_id:
         :return:
         """
         query = self.config.get('INSERT', 'table')
+        self.cursor.execute(query, {
+            'schema_id': schema_id,
+            'name': table.name,
+            'description': table.descr,
+            'can_add': table.add,
+            'can_edit': table.edit,
+            'can_delete': table.delete,
+            'temporal_mode': table.temporal_mode,
+            'means': table.means,
+            'uuid': uuid.uuid1().hex
+        })
+        table_id = self.cursor.lastrowid
+        return table_id
 
-        for table in schema.tables:
-            self.cursor.execute(query, {
-                'schema_id': schema_id,
-                'name': table.name,
-                'description': table.descr,
-                'can_add': table.add,
-                'can_edit': table.edit,
-                'can_delete': table.delete,
-                'temporal_mode': table.temporal_mode,
-                'means': table.means,
-                'uuid': uuid.uuid1().hex
-             })
+    def add_field(self, table_id, field, field_position, domain_id):
+        """
+        Add fields to database from Table
+        :param table_id: table id
+        :param fields: Array of Field
+        :return:
+        """
+        query = self.config.get('INSERT', 'field')
+        self.cursor.execute(query, {
+            'table_id': table_id,
+            'position': field_position,
+            'name': field.name,
+            'russian_short_name': field.rname,
+            'description': field.descr,
+            'domain_id': domain_id,
+            'can_input': field.input,
+            'can_edit': field.edit,
+            'show_in_grid': field.show_in_grid,
+            'show_in_details': field.show_in_details,
+            'is_mean': field.is_mean,
+            'autocalculated': field.autocalculated,
+            'required': field.required,
+            'uuid': uuid.uuid1().hex
+
+        })
 
     def update_rel_domains_datatypes(self):
         """
@@ -156,6 +187,19 @@ class DBUploader:
         schema_id = result[0]["id"]
         return schema_id
 
+    def get_domains_id(self):
+        """
+        Get all domains ids
+        :param self:
+        :return:
+        """
+        query = self.config.get("SELECT", "get_domains_id")
+        self.cursor.execute(query)
+        result_map = {}
+        for result_obj in self.get_result():
+            result_map[result_obj["name"]] = result_obj["id"]
+        return result_map
+
     def upload(self, schema):
         """
         Upload Schema to sqlite database
@@ -167,7 +211,18 @@ class DBUploader:
         schema_id = self.get_schema_id(schema)
 
         self.add_domains(schema)
-        self.add_tables(schema, schema_id)
+
+        domains_ids = self.get_domains_id()
+
+        for table in schema.tables:
+            table_id = self.add_table(table, schema_id)
+            for field in table.fields:
+                field_position = list(table.fields).index(field)
+                domain_id = domains_ids[field.domain]
+                self.add_field(table_id,field,
+                          field_position, domain_id)
+
+
         self.create_tmb_dbd()
         self.add_rel_domains_datatypes(schema)
         self.update_rel_domains_datatypes()
