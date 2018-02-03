@@ -1,15 +1,18 @@
 import unittest
-import xml.dom.minidom as dom
 from codecs import open as open
-from src import Parser, Converter
 
+from xml_module import Parser
+from ram_module import Converter
+import os.path
 
-class Test(unittest.TestCase):
+class ParsingTest(unittest.TestCase):
     def test_parsing(self):
         """
             testing parsing xml -> ram -> xml
         """
         # creating new schema in ram
+        # scriptpath = os.path.dirname(__file__)
+        # metadata_path = os.path.join(scriptpath, 'resources/prjadm.xdb.xml')
         schema = Parser("resources/tasks.xml").parseXml2Ram()
         # create xml file from schema
         xml = Converter().convertRam2Xml(schema)

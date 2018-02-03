@@ -1,7 +1,9 @@
-from src.model import Domain, Table, Field, Index, \
-    Constraint, Schema, ConstraintDetail, IndexDetail
-from src.exceptions import ParseError
 import xml.dom.minidom as dom
+
+from ram_module import Domain, Table, Field, Index, \
+    Constraint, Schema, ConstraintDetail, IndexDetail
+from utils import ParseError
+
 
 class Parser:
     """
@@ -24,9 +26,7 @@ class Parser:
 
     def _parseSchema(self):
         """
-
         Create schema from xml
-
         :param xml: xml.dom.minidom.Document
         :return: Schema
         """

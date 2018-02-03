@@ -1,5 +1,6 @@
-from src import minidom_fixed as dom
-from src.exceptions import ParseError
+from utils import ParseError
+
+from utils import minidom_fixed as dom
 
 
 class Converter:
