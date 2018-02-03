@@ -244,13 +244,13 @@ class Converter:
         self.xml.appendChild(node)
         return self.xml
 
-    def _create_constraint_detail_dom(self, detail):
+    def _create_constraint_detail(self, detail):
         detail_dom = self.xml.createElement('item')
         if detail.value:
             detail_dom.setAttribute('value', detail.value)
         return detail_dom
 
-    def _create_index_detail_dom(self, detail):
+    def _create_index_detail(self, detail):
         detail_dom = self.xml.createElement('item')
         if detail.value:
             detail_dom.setAttribute('value', detail.value)
