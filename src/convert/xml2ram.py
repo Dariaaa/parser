@@ -141,12 +141,6 @@ class Parser:
                         table.delete = True
                     else:
                         raise ParseError("Invalid format of properties: {}".format(val),"_parseTable")
-            elif name.lower() == "ht_table_flags":
-                table.ht_table_flags = val
-            elif name.lower() == "access_level":
-                table.access_level = val
-            else:
-                raise ParseError("In tag {} invalid attribute name \"{}\"".format(table.nodeName, name),"_parseTable")
         return table
 
 

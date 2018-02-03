@@ -97,11 +97,6 @@ class Converter:
             if len(properties) != 0:
                 node.setAttribute("props", ", ".join(properties))
 
-            if table.ht_table_flags is not None:
-                node.setAttribute("ht_table_flags", table.ht_table_flags)
-            if table.access_level is not None:
-                node.setAttribute("access_level", table.access_level)
-
             if len(table.fields) != 0:
                 for field in self.create_field(table.fields):
                     node.appendChild(field)

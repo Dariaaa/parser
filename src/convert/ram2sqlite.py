@@ -88,6 +88,35 @@ class DBUploader:
                 'uuid': uuid.uuid1().hex
             })
 
+    def get_result(self):
+        columns = [column[0] for column in self.cursor.description]
+        results = []
+        for row in self.cursor.fetchall():
+            results.append(dict(zip(columns, row)))
+        return results
+
+    def add_tables(self, schema, schema_id):
+        """
+        Add domains to database from Schema
+        :param schema: Schema
+        :param schema_id: Shema id
+        :return:
+        """
+        query = self.config.get('INSERT', 'table')
+
+        for table in schema.tables:
+            self.cursor.execute(query, {
+                'schema_id': schema_id,
+                'name': table.name,
+                'description': table.descr,
+                'can_add': table.add,
+                'can_edit': table.edit,
+                'can_delete': table.delete,
+                'temporal_mode': table.temporal_mode,
+                'means': table.means,
+                'uuid': uuid.uuid1().hex
+             })
+
     def update_rel_domains_datatypes(self):
         """
         Update relationship between domain table and data type table
@@ -117,6 +146,16 @@ class DBUploader:
             if e.errno != errno.ENOENT:
                 raise
 
+    def get_schema_id(self, schema):
+        query = self.config.get("SELECT", "get_schema_id")
+        self.cursor.execute(query, {
+            "name": schema.name
+        })
+        result = self.get_result()
+
+        schema_id = result[0]["id"]
+        return schema_id
+
     def upload(self, schema):
         """
         Upload Schema to sqlite database
@@ -125,7 +164,10 @@ class DBUploader:
         """
         self.init_dbd()
         self.add_schema(schema)
+        schema_id = self.get_schema_id(schema)
+
         self.add_domains(schema)
+        self.add_tables(schema, schema_id)
         self.create_tmb_dbd()
         self.add_rel_domains_datatypes(schema)
         self.update_rel_domains_datatypes()
