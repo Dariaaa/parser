@@ -163,12 +163,15 @@ class Converter:
                 node.setAttribute("name", constraint.name)
             if constraint.kind is not None:
                 node.setAttribute("kind", constraint.kind)
-            if constraint.items is not None:
-                node.setAttribute("items", constraint.items)
-            if constraint.reference_type is not None:
-                node.setAttribute("reference_type", constraint.reference_type)
+            if len(constraint.details) == 1:
+                node.setAttribute("items", constraint.details[0].value)
+            # if constraint.reference_type is not None:
+            #     node.setAttribute("reference_type", constraint.reference_type)
             if constraint.reference is not None:
                 node.setAttribute("reference", constraint.reference)
+            if constraint.expression is not None:
+                node.setAttribute('expression', constraint.expression)
+
             properties = []
             if constraint.has_value_edit:
                 properties.append("has_value_edit")
@@ -179,6 +182,11 @@ class Converter:
 
             if len(properties) != 0:
                 node.setAttribute("props", ", ".join(properties))
+
+            # for detail in constraint.details:
+            #     detail_output = self._create_constraint_detail_dom(detail)
+            #     node.appendChild(detail_output)
+
             yield node
 
 
@@ -188,27 +196,30 @@ class Converter:
         :param indexes: Index
         :return:
         """
+        nodes = []
         for index in indexes:
-            if len(index.fields) != 0:
-                node = self.xml.createElement("index")
-                if len(index.fields) == 1:
-                    node.setAttribute("field", index.fields[0])
-                else:
-                    # когда в индекс входит больше одного поля
-                    pass
-                if index.name is not None:
-                    node.setAttribute("name", index.name)
-                properties = []
-                if index.fulltext:
-                    properties.append("fulltext")
-                if index.uniqueness:
-                    properties.append("uniqueness")
-                if len(properties) != 0:
-                    node.setAttribute("props", ", ".join(properties))
+            node = self.xml.createElement("index")
 
-                yield node
-            else:
-                raise ParseError("Error! Index does not contain fields", "_create_index")
+            if index.name:
+                node.setAttribute('name', index.name)
+            if len(index.details) == 1:
+                node.setAttribute('field', index.details[0].value)
+            props = []
+
+            if index.local:
+                props.append('local')
+            if index.kind == 'uniqueness':
+                props.append('uniqueness')
+            if index.kind == 'fulltext':
+                props.append('fulltext')
+            if len(props) > 0:
+                node.setAttribute('props', ', '.join(props))
+
+            # for detail in index.details:
+            #     detail_output = self._create_index_detail_dom(detail)
+            #     node.appendChild(detail_output)
+            nodes.append(node)
+        return nodes
 
 
     def convertRam2Xml(self, schema):
@@ -232,3 +243,19 @@ class Converter:
 
         self.xml.appendChild(node)
         return self.xml
+
+    def _create_constraint_detail_dom(self, detail):
+        detail_dom = self.xml.createElement('item')
+        if detail.value:
+            detail_dom.setAttribute('value', detail.value)
+        return detail_dom
+
+    def _create_index_detail_dom(self, detail):
+        detail_dom = self.xml.createElement('item')
+        if detail.value:
+            detail_dom.setAttribute('value', detail.value)
+        if detail.expression:
+            detail_dom.setAttribute('expression', detail.expression)
+        if detail.descend:
+            detail_dom.setAttribute('descend', detail.descend)
+        return detail_dom

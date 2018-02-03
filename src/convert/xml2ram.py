@@ -1,4 +1,5 @@
-from src.model import Domain, Table, Field, Index, Constraint, Schema
+from src.model import Domain, Table, Field, Index, \
+    Constraint, Schema, ConstraintDetail, IndexDetail
 from src.exceptions import ParseError
 import xml.dom.minidom as dom
 
@@ -214,17 +215,29 @@ class Parser:
             attributes = item.attributes.items()
             for name, val in attributes:
                 if name.lower() == "field":
-                    tmp.fields.append(val)
+                    detail = IndexDetail()
+                    detail.value = val
+                    tmp.details.append(detail)
+
                 elif name.lower() == "props":
                     for prop in val.split(", "):
+                        if prop == 'local':
+                            tmp.local = True
                         if prop == "fulltext":
-                            tmp.fulltext = True
+                            tmp.kind = "fulltext"
                         elif prop == "uniqueness":
-                            tmp.uniqueness = True
+                            tmp.kind = "uniqueness"
                         else:
                             raise ParseError("Invalid format of props string: {}".format(val), "_parseIndexes")
                 else:
                     raise ParseError("In tag \"{}\" invalid attribute name \"{}\"".format(item.nodeName, name), "_parseIndexes")
+
+
+            for detail_node in item.childNodes:
+                if detail_node.tagName != 'item':
+                    pass
+                detail = self._create_index_detail(detail_node._attrs)
+                tmp.details.append(detail)
             list.append(tmp)
         return list
 
@@ -250,7 +263,9 @@ class Parser:
                 elif name.lower() == "kind":
                     constraint.kind = val
                 elif name.lower() == "items":
-                    constraint.items = val
+                    detail = ConstraintDetail()
+                    detail.value = val
+                    constraint.details.append(detail)
                 elif name.lower() == "props":
                     for prop in val.split(", "):
                         if prop == "has_value_edit":
@@ -261,11 +276,47 @@ class Parser:
                             constraint.full_cascading_delete = True
                         else:
                             raise ParseError("Invalid format of props string: {}".format(val),"_parseConstraints")
-                elif name.lower() == "reference_type":
-                    constraint.reference_type = val
                 elif name.lower() == "reference":
                     constraint.reference = val
+                elif name.lower() == 'expression':
+                    constraint.expression = val
                 else:
                     raise ParseError("In tag \"{}\" invalid attribute name \"{}\"".format(constraint.nodeName, name),"_parseConstraints")
             list.append(constraint)
+
+            for detail_node in item.childNodes:
+                if detail_node.tagName != 'item':
+                    pass
+                detail = self._create_constraint_detail(detail_node._attrs)
+                constraint.details.append(detail)
+
         return list
+
+    def _create_constraint_detail(self, attr_dict):
+        """
+
+        :param attr_dict:
+        :return:
+        """
+        detail = ConstraintDetail()
+        for attr in attr_dict:
+            if attr == 'value':
+                detail.value = attr_dict[attr].value
+            else:
+                pass
+        return detail
+
+    def _create_index_detail(self, attr_dict):
+
+        detail = IndexDetail()
+        for attr in attr_dict:
+            if attr == 'value':
+                detail.value = attr_dict[attr].value
+            elif attr == 'expression':
+                detail.expression = attr_dict[attr].value
+            elif attr == 'descend':
+                detail.descend = attr_dict[attr].value
+            else:
+                pass
+        return detail
+
