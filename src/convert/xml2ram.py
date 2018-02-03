@@ -293,15 +293,11 @@ class Parser:
         return list
 
     def _create_constraint_detail(self, attr_dict):
-        """
 
-        :param attr_dict:
-        :return:
-        """
         detail = ConstraintDetail()
-        for attr in attr_dict:
+        for attr, val in attr_dict:
             if attr == 'value':
-                detail.value = attr_dict[attr].value
+                detail.value = val
             else:
                 pass
         return detail
@@ -309,13 +305,13 @@ class Parser:
     def _create_index_detail(self, attr_dict):
 
         detail = IndexDetail()
-        for attr in attr_dict:
+        for attr, val in attr_dict:
             if attr == 'value':
-                detail.value = attr_dict[attr].value
+                detail.value = val
             elif attr == 'expression':
-                detail.expression = attr_dict[attr].value
+                detail.expression = val
             elif attr == 'descend':
-                detail.descend = attr_dict[attr].value
+                detail.descend = val
             else:
                 pass
         return detail

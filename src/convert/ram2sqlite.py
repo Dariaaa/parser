@@ -36,20 +36,6 @@ class DBUploader:
         query = self.config.get('CREATE', 'temp_rel_domain_datatype')
         self.cursor.execute(query)
 
-    def add_rel_domains_datatypes(self, schema):
-        """
-        Fill temp table
-        Create row contains domain name and data type name
-        :param schema: Schema
-        :return:
-        """
-        query = self.config.get('INSERT', 'add_rel_to_temp')
-        for domain in schema.domains:
-            self.cursor.execute(query, {
-                "domain_name" : domain.name,
-                "datatype_name": domain.type
-            })
-
     def add_schema(self, schema):
         """
         Create new schema in database
@@ -62,7 +48,6 @@ class DBUploader:
             "name": schema.name,
         })
 
-
     def get_result(self):
         """
         Get result executing query
@@ -73,23 +58,6 @@ class DBUploader:
         for row in self.cursor.fetchall():
             results.append(dict(zip(columns, row)))
         return results
-
-
-    def update_rel_domains_datatypes(self):
-        """
-        Update relationship between domain table and data type table
-        :return:
-        """
-        query = self.config.get('UPDATE', 'domain_datatype_rel')
-        self.cursor.execute(query)
-
-    def drop_tmp(self):
-        """
-        Delete temp table
-        :return:
-        """
-        query = self.config.get('DROP', 'temp')
-        self.cursor.execute(query)
 
     @staticmethod
     def _drop_if_exists(file_name: str):
@@ -114,11 +82,11 @@ class DBUploader:
         schema_id = result[0]["id"]
         return schema_id
 
-    def get_id(self,table):
+    def get_id(self, table):
         """
         Get all ids
         :param self:
-        :return:
+        :return: map{name:id}
         """
         query = self.config.get("SELECT", "get_"+table+"_id")
         self.cursor.execute(query)
@@ -149,7 +117,7 @@ class DBUploader:
                 'thousands_separator': domain.thousands_separator,
                 'summable': domain.summable,
                 'case_sensitive': domain.case_sensitive,
-                'data_type_id': 1,
+                'data_type_id': domain.type,
                 'uuid': uuid.uuid1().hex
             })
 
@@ -204,33 +172,62 @@ class DBUploader:
             'uuid': uuid.uuid1().hex
 
         })
+        field_id = self.cursor.lastrowid
+        return field_id
 
-    def add_constraint(self, table_id, constraint):
+    def add_constraint(self, table_id, table_name, constraint):
+        """
+        Upload constraint
+        :param table_id:
+        :param table_name:
+        :param constraint:
+        :return:
+        """
         query = self.config.get('INSERT', 'constraint')
         self.cursor.execute(query, {
+            'id': id(constraint),
             'table_id': table_id,
             'name': constraint.name,
             'constraint_type': constraint.kind,
-            'unique_key_id': 1,
-            'reference': constraint.reference,
+            'unique_key_id': 1, #will update by "update_unique_key" script
+            'reference': table_name,
             'has_value_edit': constraint.has_value_edit,
             'cascading_delete': constraint.cascading_delete,
             'expression': constraint.expression,
             'uuid': uuid.uuid1().hex
         })
+        constraint_id = self.cursor.lastrowid
 
+        #   updating unique key for constraints
+        query = self.config.get('UPDATE', 'update_unique_key')
+        self.cursor.execute(query, {
+            'id': constraint_id
+        })
+        return constraint_id
 
-    def add_constraint_detail(self, detail, constraint, field_id):
-
+    def add_constraint_detail(self, detail, constraint,constraint_id, field_id):
+        """
+        Upload constraint detail
+        :param detail:
+        :param constraint:
+        :param constraint_id:
+        :param field_id:
+        :return:
+        """
         query = self.config.get('INSERT', 'constraint_detail')
         self.cursor.execute(query, {
-            'constraint_id': id(constraint),
+            'constraint_id': constraint_id,
             'position': constraint.details.index(detail),
             'field_id': field_id
         })
 
     def add_index(self, table_id,  index):
-
+        """
+        Upload index
+        :param table_id:
+        :param index:
+        :return:
+        """
         query = self.config.get('INSERT', 'index')
         self.cursor.execute(query, {
             'id': id(index),
@@ -240,12 +237,21 @@ class DBUploader:
             'kind': index.kind,
             'uuid': uuid.uuid1().hex
         })
+        index_id = self.cursor.lastrowid
+        return index_id
 
-    def add_index_detail(self, detail, index, field_id):
-
+    def add_index_detail(self, detail, index, index_id, field_id):
+        """
+        Upload index details
+        :param detail:
+        :param index:
+        :param index_id:
+        :param field_id:
+        :return:
+        """
         query = self.config.get('INSERT', 'index_detail')
         self.cursor.execute(query, {
-            'index_id': id(index),
+            'index_id': index_id,
             'position': index.details.index(detail),
             'field_id': field_id,
             'expression': detail.expression,
@@ -275,24 +281,14 @@ class DBUploader:
                 self.add_field(table_id, field, field_position, domain_id)
             fields_ids = self.get_id("fields")
             for constraint in table.constraints:
-                self.add_constraint(table_id, constraint)
+                constraint_id = self.add_constraint(table_id, table.name, constraint)
                 for detail in constraint.details:
                     field_id = fields_ids[detail.value]
-                    self.add_constraint_detail(detail,constraint, field_id)
+                    self.add_constraint_detail(detail, constraint, constraint_id, field_id)
             for index in table.indexes:
-                self.add_index(table_id, index)
+                index_id = self.add_index(table_id, index)
                 for detail in index.details:
                     field_id = fields_ids[detail.value]
-                    self.add_index_detail(detail,index, field_id)
+                    self.add_index_detail(detail, index, index_id, field_id)
 
-        #   updating unique key for constraints
-        query = self.config.get('UPDATE', 'update_unique_key')
-        self.cursor.execute(query)
-
-
-
-        self.create_tmb_dbd()
-        self.add_rel_domains_datatypes(schema)
-        self.update_rel_domains_datatypes()
-        self.drop_tmp()
         self.conn.commit()
