@@ -1,6 +1,7 @@
-from xml_module import Parser
-from ram_module import Converter, DBUploader
 import os.path
+
+from src.ram_module import Converter, DBUploader
+from src.xml_module import Parser
 
 #   Parsing xml to ram
 scriptpath = os.path.dirname(__file__)

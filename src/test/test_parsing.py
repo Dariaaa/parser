@@ -1,9 +1,10 @@
 import unittest
 from codecs import open as open
 
-from xml_module import Parser
-from ram_module import Converter
-import os.path
+from src.xml_module import Parser
+
+from src.ram_module import Converter
+
 
 class ParsingTest(unittest.TestCase):
     def test_parsing(self):

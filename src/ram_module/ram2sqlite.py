@@ -1,10 +1,11 @@
-from db.sqlite_ddl_init import SQL_DBD_Init
-
-import uuid
-import os
-import errno
-import sqlite3
 import configparser
+import errno
+import os
+import sqlite3
+import uuid
+
+from src.db.sqlite_ddl_init import SQL_DBD_Init
+
 
 class DBUploader:
 

@@ -1,8 +1,7 @@
 import xml.dom.minidom as dom
 
-from ram_module import Domain, Table, Field, Index, \
-    Constraint, Schema, ConstraintDetail, IndexDetail
-from utils import ParseError
+from src.ram_module import Domain, Table, Field, Index, Constraint, Schema, ConstraintDetail, IndexDetail
+from src.utils import ParseError
 
 
 class Parser:

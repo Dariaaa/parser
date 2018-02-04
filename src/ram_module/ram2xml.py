@@ -1,6 +1,6 @@
 from utils import ParseError
 
-from utils import minidom_fixed as dom
+from src.utils import minidom_fixed as dom
 
 
 class Converter:
