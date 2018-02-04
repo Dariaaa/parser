@@ -77,8 +77,7 @@ class Constraint:
         self.expression = None
         self.reference = None
         self.has_value_edit = False
-        self.cascading_delete = False
-        self.full_cascading_delete = False
+        self.cascading_delete = None
 
         self.details = []
 

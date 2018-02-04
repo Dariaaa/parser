@@ -1,6 +1,8 @@
 from dbd_module import DBDownoader
 from ram_module import Converter
 
+# DOWNLOADING DATA FROM DBD TO XML
+
 config_path = 'db/sqlite_queries.cfg'
 db_path = 'db/test_db.db'
 

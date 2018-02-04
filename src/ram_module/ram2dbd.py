@@ -47,6 +47,9 @@ class DBUploader:
 
         self.cursor.execute(query, {
             "name": schema.name,
+            "fulltext_engine": schema.fulltext_engine,
+            "version": schema.version,
+            "description": schema.descr
         })
 
     def get_result(self):
@@ -185,19 +188,27 @@ class DBUploader:
         :return:
         """
         query = self.config.get('INSERT', 'constraint')
+        ref = constraint.reference
+
         self.cursor.execute(query, {
             'id': id(constraint),
             'table_id': table_id,
             'name': constraint.name,
             'constraint_type': constraint.kind,
             'unique_key_id': 1, #will update by "update_unique_key" script
-            'reference': table_name,
+            'reference': ref,
             'has_value_edit': constraint.has_value_edit,
             'cascading_delete': constraint.cascading_delete,
             'expression': constraint.expression,
             'uuid': uuid.uuid1().hex
         })
         constraint_id = self.cursor.lastrowid
+        if ref is not None:
+            query = self.config.get("INSERT", "tmp_const_tabl")
+            self.cursor.execute(query, {
+                "constraint_id": constraint_id,
+                "table_name": ref
+            })
 
         #   updating unique key for constraints
         query = self.config.get('UPDATE', 'update_unique_key')
@@ -259,6 +270,18 @@ class DBUploader:
             'descend': detail.descend
         })
 
+    def add_tmp_table(self):
+        query = self.config.get('TEMP', 'temp_rel_constraint_table')
+        self.cursor.execute(query)
+
+    def update_rel_constraints(self):
+        query = self.config.get('TEMP', 'update_rel_constraints_table')
+        self.cursor.execute(query)
+
+    def drop_rel_constraints(self):
+        query = self.config.get('TEMP', 'drop_rel_constraints_table')
+        self.cursor.execute(query)
+
     def upload(self, schema):
         """
         Upload Schema to sqlite database
@@ -272,7 +295,7 @@ class DBUploader:
         self.add_domains(schema)
 
         domains_ids = self.get_id("domains")
-
+        self.add_tmp_table()
 
         for table in schema.tables:
             table_id = self.add_table(table, schema_id)
@@ -291,5 +314,6 @@ class DBUploader:
                 for detail in index.details:
                     field_id = fields_ids[detail.value]
                     self.add_index_detail(detail, index, index_id, field_id)
-
+        self.update_rel_constraints()
+        self.drop_rel_constraints()
         self.conn.commit()

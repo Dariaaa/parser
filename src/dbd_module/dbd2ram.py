@@ -114,6 +114,9 @@ class DBDownoader:
                 continue
             tables[table_id].constraints.append(constraint)
             constraints[constraint_id] = constraint
+            if (constraint.reference in tables.keys()):
+                constraint.reference = tables[constraint.reference].name;
+
 
         indices = {}
         for row in self.load_index():
@@ -150,7 +153,7 @@ class DBDownoader:
             elif attr == 'version':
                 schema.version = schema_row[attr]
             elif attr == 'description':
-                schema.description = schema_row[attr]
+                schema.descr = schema_row[attr]
             elif attr == 'id':
                 schema_id = schema_row[attr]
             else:
@@ -174,7 +177,7 @@ class DBDownoader:
             elif attr == 'char_length':
                 domain.char_length = attr_dict[attr]
             elif attr == 'description':
-                domain.description = attr_dict[attr]
+                domain.descr = attr_dict[attr]
             elif attr == 'length':
                 domain.length = attr_dict[attr]
             elif attr == 'scale':
@@ -207,7 +210,7 @@ class DBDownoader:
             if attr == 'name':
                 table.name = attr_dict[attr]
             elif attr == 'description':
-                table.description = attr_dict[attr]
+                table.descr = attr_dict[attr]
             elif attr == 'temporal_mode':
                 table.ht_table_flags = attr_dict[attr]
             elif attr == 'access_level':
@@ -244,7 +247,7 @@ class DBDownoader:
             elif attr == 'type':
                 field.type = attr_dict[attr]
             elif attr == 'description':
-                field.description = attr_dict[attr]
+                field.descr = attr_dict[attr]
             elif attr == 'can_input':
                 field.input = attr_dict[attr]
             elif attr == 'can_edit':
@@ -300,7 +303,7 @@ class DBDownoader:
             elif attr == 'table_id':
                 table_id = attr_dict[attr]
             else:
-                raise Exception("Unsupported attribute")
+                raise Exception("Unsupported attribute " + attr)
         return constraint, constraint_id, table_id
 
     def create_index(self,attr_dict):

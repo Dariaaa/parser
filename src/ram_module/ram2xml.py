@@ -159,6 +159,7 @@ class Converter:
         :param constraints: Constraint
         :return:
         """
+        list = []
         for constraint in constraints:
             node = self.xml.createElement("constraint")
             if constraint.name is not None:
@@ -167,19 +168,17 @@ class Converter:
                 node.setAttribute("kind", constraint.kind)
             if len(constraint.details) == 1:
                 node.setAttribute("items", constraint.details[0].value)
-            # if constraint.reference_type is not None:
-            #     node.setAttribute("reference_type", constraint.reference_type)
             if constraint.reference is not None:
-                node.setAttribute("reference", constraint.reference)
+                node.setAttribute("reference", str(constraint.reference))
             if constraint.expression is not None:
                 node.setAttribute('expression', constraint.expression)
 
             properties = []
             if constraint.has_value_edit:
                 properties.append("has_value_edit")
-            if constraint.cascading_delete:
+            if constraint.cascading_delete == False:
                 properties.append("cascading_delete")
-            if constraint.full_cascading_delete:
+            if constraint.cascading_delete == True:
                 properties.append("full_cascading_delete")
 
             if len(properties) != 0:
@@ -188,8 +187,8 @@ class Converter:
             # for detail in constraint.details:
             #     detail_output = self._create_constraint_detail(detail)
             #     node.appendChild(detail_output)
-
-            yield node
+            list.append(node)
+        return list
 
 
     def create_index(self, indexes):

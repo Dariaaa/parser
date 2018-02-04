@@ -270,9 +270,9 @@ class Parser:
                         if prop == "has_value_edit":
                             constraint.has_value_edit = True
                         elif prop == "cascading_delete":
-                            constraint.cascading_delete = True
+                            constraint.cascading_delete = False
                         elif prop == "full_cascading_delete":
-                            constraint.full_cascading_delete = True
+                            constraint.cascading_delete = True
                         else:
                             raise ParseError("Invalid format of props string: {}".format(val),"_parseConstraints")
                 elif name.lower() == "reference":

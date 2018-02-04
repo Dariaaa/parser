@@ -13,8 +13,11 @@ begin transaction;
 -- Каталог схем для таблиц
 --
 create table dbd$schemas (
-    id integer primary key autoincrement not null,
-    name varchar not null -- имя схемы
+    id              INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL
+        ,name            VARCHAR                           NOT NULL
+        ,fulltext_engine VARCHAR                               NULL
+        ,version         VARCHAR                               NULL
+        ,description     VARCHAR                               NULL
 );
 """
 
