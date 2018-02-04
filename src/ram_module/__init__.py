@@ -9,4 +9,4 @@ from .ram_structure import ConstraintDetail
 
 from .ram2xml import Converter
 
-from .ram2sqlite import DBUploader
+from .ram2dbd import DBUploader

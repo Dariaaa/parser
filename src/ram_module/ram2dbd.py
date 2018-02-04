@@ -4,7 +4,7 @@ import os
 import sqlite3
 import uuid
 
-from src.db.sqlite_ddl_init import SQL_DBD_Init
+from db.sqlite_ddl_init import SQL_DBD_Init
 
 
 class DBUploader:

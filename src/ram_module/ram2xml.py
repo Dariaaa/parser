@@ -1,6 +1,6 @@
 from utils import ParseError
 
-from src.utils import minidom_fixed as dom
+from utils import minidom_fixed as dom
 
 
 class Converter:
@@ -24,7 +24,7 @@ class Converter:
             node.setAttribute("name", schema.name)
         if schema.descr is not None:
             node.setAttribute("description", schema.descr)
-        node.appendChild(self.xml.createElement("custom"))
+
         return node
 
 
@@ -45,11 +45,12 @@ class Converter:
             if domain.align is not None:
                 node.setAttribute("align", domain.align)
             if domain.width is not None:
-                node.setAttribute("width", domain.width)
+                node.setAttribute("width", str(domain.width))
+                # print(type(domain.width))
             if domain.length is not None:
-                node.setAttribute("length", domain.length)
+                node.setAttribute("length", str(domain.length))
             if domain.precision is not None:
-                node.setAttribute("precision", domain.precision)
+                node.setAttribute("precision", str(domain.precision))
             properties = []
             if domain.show_null:
                 properties.append("show_null")
@@ -66,11 +67,11 @@ class Converter:
                 node.setAttribute("props", ", ".join(properties))
 
             if domain.char_length is not None:
-                node.setAttribute("char_length", domain.char_length)
+                node.setAttribute("char_length", str(domain.char_length))
             if domain.length is not None:
-                node.setAttribute("length", domain.length)
+                node.setAttribute("length", str(domain.length))
             if domain.scale is not None:
-                node.setAttribute("scale", domain.scale)
+                node.setAttribute("scale", str(domain.scale))
             yield node
 
 
@@ -232,6 +233,8 @@ class Converter:
         if schema is None:
             raise ParseError("Schema is none", "convertRam2Xml")
         node = self.create_schema(schema)
+        node.appendChild(self.xml.createElement("custom"))
+
         domains = self.xml.createElement("domains")
         for domain in self.create_domain(schema.domains):
             domains.appendChild(domain)

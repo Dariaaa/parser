@@ -12,19 +12,17 @@ class ParsingTest(unittest.TestCase):
             testing parsing xml -> ram -> xml
         """
         # creating new schema in ram
-        # scriptpath = os.path.dirname(__file__)
-        # metadata_path = os.path.join(scriptpath, 'resources/prjadm.xdb.xml')
         schema = Parser("resources/tasks.xml").parseXml2Ram()
         # create xml file from schema
         xml = Converter().convertRam2Xml(schema)
         # writing result to file tasks1.xml
-        file = open('resources/tasks1.xml', 'w', "utf8")
+        file = open('resources/parsing_test_result.xml', 'w', "utf8")
         xml.writexml(file, indent="  ", addindent="  ", newl='\n')
         file.close()
         diffs = ""
         # comparing 2 files - result and origin
         with open("resources/tasks.xml", 'r', 'utf8') as source_file, \
-                open("resources/tasks1.xml", 'r', 'utf8') as result_file:
+                open("resources/parsing_test_result.xml", 'r', 'utf8') as result_file:
             equal = True
             i = 0
             for source_line in source_file:
