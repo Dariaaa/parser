@@ -179,7 +179,7 @@ class DBUploader:
         field_id = self.cursor.lastrowid
         return field_id
 
-    def add_constraint(self, table_id, table_name, constraint):
+    def add_constraint(self, table_id, constraint):
         """
         Upload constraint
         :param table_id:
@@ -305,7 +305,7 @@ class DBUploader:
                 self.add_field(table_id, field, field_position, domain_id)
             fields_ids = self.get_id("fields")
             for constraint in table.constraints:
-                constraint_id = self.add_constraint(table_id, table.name, constraint)
+                constraint_id = self.add_constraint(table_id, constraint)
                 for detail in constraint.details:
                     field_id = fields_ids[detail.value]
                     self.add_constraint_detail(detail, constraint, constraint_id, field_id)

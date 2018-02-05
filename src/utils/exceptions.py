@@ -1,7 +1,8 @@
 class ParseError(Exception):
-    def __init__(self, mess, methodName):
-        print("Parse error in " + methodName +
+    def __init__(self, mess, obj):
+        print("Parse error in " + obj.__name__ +
               " with message: " + mess)
     pass
+
 
 

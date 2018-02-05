@@ -41,7 +41,7 @@ class Parser:
                 elif name.lower() == "description":
                     schema.descr = val
                 else:
-                    raise ParseError("In tag \"{}\" invalid attribute name \"{}\"".format(schema.nodeName, name),"_parseSchema")
+                    raise ParseError("Invalid attribute name \"{}\"".format(name), self)
         return schema
 
     def _parseDomains(self):
@@ -89,7 +89,7 @@ class Parser:
                         elif prop == "thousands_separator":
                             domain.thousands_separator = True
                         else:
-                            raise ParseError("Invalid format of propertiess: {}".format(val),"_parseDomains")
+                            raise ParseError("Invalid format of propertiess: \"{}\"".format(val), self)
             list.append(domain)
         return list
 
@@ -140,7 +140,7 @@ class Parser:
                     elif prop == "delete":
                         table.delete = True
                     else:
-                        raise ParseError("Invalid format of properties: {}".format(val),"_parseTable")
+                        raise ParseError("Invalid format of propertiess: \"{}\" ".format(val), self)
         return table
 
 
@@ -184,11 +184,11 @@ class Parser:
                         elif prop == "required":
                             field.required = True
                         else:
-                            raise ParseError("Invalid format of properties: {}".format(val),"_parseFields")
+                            raise ParseError("Invalid format of propertiess: \"{}\"".format(val), self)
                 elif name.lower() == "description":
                     field.descr = val
                 else:
-                    raise ParseError("In tag \"{}\" invalid attribute name \"{}\"".format(field.nodeName, name),"_parseFields")
+                    raise ParseError("Invalid attribute name \"{}\"".format(name), self)
 
             list.append(field)
 
@@ -227,9 +227,9 @@ class Parser:
                         elif prop == "uniqueness":
                             tmp.kind = "uniqueness"
                         else:
-                            raise ParseError("Invalid format of props string: {}".format(val), "_parseIndexes")
+                            raise ParseError("Invalid format of propertiess: \"{}\"".format(val), self)
                 else:
-                    raise ParseError("In tag \"{}\" invalid attribute name \"{}\"".format(item.nodeName, name), "_parseIndexes")
+                    raise ParseError("Invalid attribute name \"{}\"".format(name), self)
 
 
             for detail_node in item.childNodes:
@@ -274,13 +274,13 @@ class Parser:
                         elif prop == "full_cascading_delete":
                             constraint.cascading_delete = True
                         else:
-                            raise ParseError("Invalid format of props string: {}".format(val),"_parseConstraints")
+                            raise ParseError("Invalid format of propertiess: \"{}\"".format(val), self)
                 elif name.lower() == "reference":
                     constraint.reference = val
                 elif name.lower() == 'expression':
                     constraint.expression = val
                 else:
-                    raise ParseError("In tag \"{}\" invalid attribute name \"{}\"".format(constraint.nodeName, name),"_parseConstraints")
+                    raise ParseError("Invalid attribute name \"{}\"".format(name), self)
             list.append(constraint)
 
             for detail_node in item.childNodes:
@@ -292,17 +292,25 @@ class Parser:
         return list
 
     def _create_constraint_detail(self, attr_dict):
-
+        """
+        Create detail of constraint
+        :param attr_dict:
+        :return:
+        """
         detail = ConstraintDetail()
         for attr, val in attr_dict:
             if attr == 'value':
                 detail.value = val
             else:
-                pass
+                raise ParseError("Invalid attribute name \"{}\"".format(attr),self)
         return detail
 
     def _create_index_detail(self, attr_dict):
-
+        """
+        Create detail of index
+        :param attr_dict:
+        :return:
+        """
         detail = IndexDetail()
         for attr, val in attr_dict:
             if attr == 'value':
@@ -312,6 +320,6 @@ class Parser:
             elif attr == 'descend':
                 detail.descend = val
             else:
-                pass
+                raise ParseError("Invalid attribute name \"{}\"".format(attr), self)
         return detail
 

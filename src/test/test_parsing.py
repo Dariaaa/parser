@@ -5,22 +5,27 @@ from dbd_module import DBDownoader
 from ram_module import DBUploader
 from src.xml_module import Parser
 
+import os
+
 from src.ram_module import Converter
 
 
 class ParsingTest(unittest.TestCase):
     def test_parsing(self):
+
         """
             testing parsing xml -> ram -> xml
         """
+        ROOT_DIR = "D:/Projects/python/metadataparserpython/src/resources/";
+
         # creating new schema in ram
-        schema = Parser("resources/tasks.xml").parseXml2Ram()
+        schema = Parser(ROOT_DIR+"tasks.xml").parseXml2Ram()
         # create xml file from schema
         xml = Converter().convertRam2Xml(schema)
         # writing result to file parsing_test_result.xml
-        self.write_file(xml, 'resources/parsing_test_result.xml')
+        self.write_file(xml, ROOT_DIR+'parsing_test_result.xml')
         # comparing origin and result files
-        diffs = self.compare("resources/tasks.xml",'resources/parsing_test_result.xml')
+        diffs = self.compare(ROOT_DIR+"tasks.xml", ROOT_DIR+'parsing_test_result.xml')
         # if diffs is empty then files are equal
         equal = True if diffs == "" else False
         self.assertTrue(equal, msg=diffs)
@@ -67,16 +72,20 @@ class ParsingTest(unittest.TestCase):
         """
                 testing xml->ram->dbd->ram->xml
         """
+        ROOT = "D:/Projects/python/metadataparserpython/src/"
+        RESOURCES_DIR = ROOT+"resources/"
+        DB_DIR =  ROOT+"db/"
 
-        config_path = 'db/sqlite_queries.cfg'
-        db_path = 'db/test_db.db'
-        metadata_path = 'resources/prjadm.xdb.xml'
+        config_path = DB_DIR+'sqlite_queries.cfg'
+        db_path = DB_DIR+'test_db.db'
+
+        metadata_path = RESOURCES_DIR+'prjadm.xdb.xml'
 
         #   Parsing xml to ram
         schema = Parser(metadata_path).parseXml2Ram()
         #   Parsing ram to xml
         xml = Converter().convertRam2Xml(schema)
-        self.write_file(xml, "resources/xml2dbd_test_1.xml")
+        self.write_file(xml, RESOURCES_DIR+"xml2dbd_test_1.xml")
         # print(xml)
         # with open("resources/xml2dbd_result.xml", "w") as file:
         #    file.write(xml.toprettyxml(encoding="utf-8").decode("utf-8"))
@@ -87,9 +96,9 @@ class ParsingTest(unittest.TestCase):
         schemas = DBDownoader(config_path, db_path).load()
 
         xml = Converter().convertRam2Xml(schemas[1])
-        self.write_file(xml, "resources/xml2dbd_test_2.xml")
-        diffs = self.compare("resources/xml2dbd_test_1.xml",
-                             'resources/xml2dbd_test_2.xml')
+        self.write_file(xml, RESOURCES_DIR+"xml2dbd_test_2.xml")
+        diffs = self.compare(RESOURCES_DIR+"xml2dbd_test_1.xml",
+                             RESOURCES_DIR+'xml2dbd_test_2.xml')
         # if diffs is empty then files are equal
         equal = True if diffs == "" else False
 

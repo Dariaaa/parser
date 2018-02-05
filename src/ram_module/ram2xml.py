@@ -46,7 +46,6 @@ class Converter:
                 node.setAttribute("align", domain.align)
             if domain.width is not None:
                 node.setAttribute("width", str(domain.width))
-                # print(type(domain.width))
             if domain.length is not None:
                 node.setAttribute("length", str(domain.length))
             if domain.precision is not None:
