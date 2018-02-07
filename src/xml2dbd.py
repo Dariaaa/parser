@@ -11,7 +11,7 @@ metadata_path = 'resources/prjadm.xdb.xml'
 schema = Parser(metadata_path).parseXml2Ram()
 #   Parsing ram to xml
 xml = Converter().convertRam2Xml(schema)
-print(xml)
+# print(xml)
 # with open("resources/xml2dbd_result.xml", "w") as file:
 #    file.write(xml.toprettyxml(encoding="utf-8").decode("utf-8"))
 

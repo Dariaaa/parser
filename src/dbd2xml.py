@@ -10,6 +10,6 @@ loader = DBDownoader(config_path, db_path)
 schemas = loader.load()
 
 xml = Converter().convertRam2Xml(schemas[1])
-print(xml)
+# print(xml)
 # with open("resources/dbd2xml_result.xml", "w") as file:
 #    file.write(xml.toprettyxml(encoding="utf-8").decode("utf-8"))
