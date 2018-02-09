@@ -1,5 +1,5 @@
-from db.postgres_db_init import DBInitialisator
-from src.xml_module import Parser
+from db import DBInitialisator
+from xml_module import Parser
 
 metadata_path = 'resources/prjadm.xdb.xml'
 

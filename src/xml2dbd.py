@@ -1,5 +1,5 @@
-from src.ram_module import Converter, DBUploader
-from src.xml_module import Parser
+from ram_module import Converter, DBUploader
+from xml_module import Parser
 
 # CONVERTING XML TO DBD
 
