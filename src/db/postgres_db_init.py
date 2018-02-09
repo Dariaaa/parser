@@ -67,7 +67,7 @@ class DBInitialisator:
         return """ALTER TABLE {}."{}" ADD {};"""\
             .format(schema.name,table.name,str)
 
-    
+
     def create_index_ddl(self,index: Index, table: Table, schema: Schema):
         details = []
         for det in index.details:
@@ -118,6 +118,7 @@ class DBInitialisator:
         scripts.append('COMMIT;')
 
         queries = '\n'.join(scripts)
+        print(queries)
 
         self.conn.execute(queries)
 
