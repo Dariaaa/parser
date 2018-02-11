@@ -1,12 +1,11 @@
-from utils import ParseError
-
+from utils import ParseError, ItemNotFoundException
 from utils import minidom_fixed as dom
+from utils.writer import Writer
 
 
 class Converter:
     def __init__(self):
         self.xml = dom.Document()
-
 
     def create_schema(self, schema):
         """
@@ -222,14 +221,15 @@ class Converter:
         return nodes
 
 
-    def convertRam2Xml(self, schema):
+    def convertRam2Xml(self, schema, xml_path):
         """
         Create ram representation of incoming Schema object
-        :param schema: Schema
+        :param schema:
+        :param xml_path:
         :return:
         """
         if schema is None:
-            raise ParseError("Schema is none", "convertRam2Xml")
+            raise ParseError("Schema not found", self)
         node = self.create_schema(schema)
         node.appendChild(self.xml.createElement("custom"))
 
@@ -241,10 +241,16 @@ class Converter:
         tables = self.xml.createElement("tables")
         for table in self.create_table(schema.tables):
             tables.appendChild(table)
-        node.appendChild(tables)
 
-        self.xml.appendChild(node)
-        return self.xml
+        node.appendChild(tables)
+        try:
+            self.xml.appendChild(node)
+            if xml_path:
+                Writer.write_xml(xml_path,self.xml)
+        except Exception:
+            raise ItemNotFoundException("domains, tables", schema.name)
+
+
 
     def _create_constraint_detail(self, detail):
         detail_dom = self.xml.createElement('item')

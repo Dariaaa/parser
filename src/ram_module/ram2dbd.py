@@ -9,11 +9,8 @@ from db.sqlite_ddl_init import SQL_DBD_Init
 
 class DBUploader:
 
-    def __init__(self, config_file, db_file_name):
-
-        self.config = configparser.ConfigParser()
-        self.config.read(config_file, 'utf-8')
-
+    def __init__(self, queries, db_file_name):
+        self.config = queries
         self._drop_if_exists(db_file_name)
         self.conn = sqlite3.connect(db_file_name)
         self.cursor = self.conn.cursor()
@@ -34,7 +31,7 @@ class DBUploader:
         of domain table and datatype table
         :return:
         """
-        query = self.config.get('CREATE', 'temp_rel_domain_datatype')
+        query = self.config.temp_rel_domain_datatype
         self.cursor.execute(query)
 
     def add_schema(self, schema):
@@ -43,7 +40,7 @@ class DBUploader:
         :param schema:
         :return:
         """
-        query = self.config.get('INSERT', 'schema')
+        query = self.config.insert_schema
 
         self.cursor.execute(query, {
             "name": schema.name,
@@ -77,7 +74,7 @@ class DBUploader:
                 raise
 
     def get_schema_id(self, schema):
-        query = self.config.get("SELECT", "get_schema_id")
+        query = self.config.get_schema_id
         self.cursor.execute(query, {
             "name": schema.name
         })
@@ -86,13 +83,12 @@ class DBUploader:
         schema_id = result[0]["id"]
         return schema_id
 
-    def get_id(self, table):
+    def get_id(self,query):
         """
         Get all ids
         :param self:
         :return: map{name:id}
         """
-        query = self.config.get("SELECT", "get_"+table+"_id")
         self.cursor.execute(query)
         result_map = {}
         for result_obj in self.get_result():
@@ -105,7 +101,7 @@ class DBUploader:
         :param schema: Schema
         :return:
         """
-        query = self.config.get('INSERT', 'domain')
+        query = self.config.insert_domain
         for domain in schema.domains:
             self.cursor.execute(query, {
                 'name': domain.name,
@@ -133,7 +129,7 @@ class DBUploader:
         :param schema_id:
         :return:
         """
-        query = self.config.get('INSERT', 'table')
+        query = self.config.insert_table
         self.cursor.execute(query, {
             'schema_id': schema_id,
             'name': table.name,
@@ -158,7 +154,7 @@ class DBUploader:
         :return:
         """
 
-        query = self.config.get('INSERT', 'field')
+        query = self.config.insert_field
         self.cursor.execute(query, {
             'table_id': table_id,
             'position': field_position,
@@ -187,7 +183,7 @@ class DBUploader:
         :param constraint:
         :return:
         """
-        query = self.config.get('INSERT', 'constraint')
+        query = self.config.insert_constraint
         ref = constraint.reference
 
         self.cursor.execute(query, {
@@ -204,14 +200,14 @@ class DBUploader:
         })
         constraint_id = self.cursor.lastrowid
         if ref is not None:
-            query = self.config.get("INSERT", "tmp_const_tabl")
+            query = self.config.tmp_const_table
             self.cursor.execute(query, {
                 "constraint_id": constraint_id,
                 "table_name": ref
             })
 
         #   updating unique key for constraints
-        query = self.config.get('UPDATE', 'update_unique_key')
+        query = self.config.update_unique_key
         self.cursor.execute(query, {
             'id': constraint_id
         })
@@ -226,7 +222,7 @@ class DBUploader:
         :param field_id:
         :return:
         """
-        query = self.config.get('INSERT', 'constraint_detail')
+        query = self.config.insert_constraint_detail
         self.cursor.execute(query, {
             'constraint_id': constraint_id,
             'position': constraint.details.index(detail),
@@ -240,7 +236,7 @@ class DBUploader:
         :param index:
         :return:
         """
-        query = self.config.get('INSERT', 'index')
+        query = self.config.insert_index
         self.cursor.execute(query, {
             'id': id(index),
             'table_id': table_id,
@@ -261,7 +257,7 @@ class DBUploader:
         :param field_id:
         :return:
         """
-        query = self.config.get('INSERT', 'index_detail')
+        query = self.config.insert_index_detail
         self.cursor.execute(query, {
             'index_id': index_id,
             'position': index.details.index(detail),
@@ -271,15 +267,15 @@ class DBUploader:
         })
 
     def add_tmp_table(self):
-        query = self.config.get('TEMP', 'temp_rel_constraint_table')
+        query = self.config.temp_rel_constraint_table
         self.cursor.execute(query)
 
     def update_rel_constraints(self):
-        query = self.config.get('TEMP', 'update_rel_constraints_table')
+        query = self.config.update_rel_constraints_table
         self.cursor.execute(query)
 
     def drop_rel_constraints(self):
-        query = self.config.get('TEMP', 'drop_rel_constraints_table')
+        query = self.config.drop_rel_constraints_table
         self.cursor.execute(query)
 
     def upload(self, schema):
@@ -294,7 +290,7 @@ class DBUploader:
 
         self.add_domains(schema)
 
-        domains_ids = self.get_id("domains")
+        domains_ids = self.get_id(self.config.get_domains_id)
         self.add_tmp_table()
 
         for table in schema.tables:
@@ -303,7 +299,7 @@ class DBUploader:
                 field_position = list(table.fields).index(field)
                 domain_id = domains_ids[field.domain]
                 self.add_field(table_id, field, field_position, domain_id)
-            fields_ids = self.get_id("fields")
+            fields_ids = self.get_id(self.config.get_fields_id)
             for constraint in table.constraints:
                 constraint_id = self.add_constraint(table_id, constraint)
                 for detail in constraint.details:
@@ -317,3 +313,4 @@ class DBUploader:
         self.update_rel_constraints()
         self.drop_rel_constraints()
         self.conn.commit()
+

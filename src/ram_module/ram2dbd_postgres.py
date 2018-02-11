@@ -1,7 +1,12 @@
 import postgresql
+
+from db.config import postgressql_url, result_path
 from ram_module import Schema,Domain,Table,Field,\
     Constraint,Index
-from .postgres_util import get_type_in_postgres
+from db.postgres_util import get_type_in_postgres
+from utils import TypeNotFoundException
+from utils.writer import Writer
+
 
 class DBInitialisator:
     """
@@ -10,7 +15,7 @@ class DBInitialisator:
 
     """
     def __init__(self):
-        self.url = 'pq://postgres:123@localhost:5432'
+        self.url = postgressql_url
         self.conn = postgresql.open(self.url)
 
 
@@ -28,9 +33,13 @@ class DBInitialisator:
         return "CREATE SCHEMA {};".format(schema.name)
 
     def create_domain_ddl(self, domain:Domain, schema:Schema):
-        ddl =  """CREATE DOMAIN {}."{}" AS {}; """\
-            .format(schema.name, domain.name, get_type_in_postgres(domain))
-        if (domain.descr):
+        try:
+            ddl =  """CREATE DOMAIN {}."{}" AS {}; """\
+                .format(schema.name, domain.name, get_type_in_postgres(domain))
+        except TypeNotFoundException:
+            return ''
+
+        if domain.descr:
             ddl+= """COMMENT ON DOMAIN {}."{}" IS \'{}\';"""\
             .format(schema.name,domain.name,domain.descr)
         return ddl
@@ -118,7 +127,8 @@ class DBInitialisator:
         scripts.append('COMMIT;')
 
         queries = '\n'.join(scripts)
-        print(queries)
+
+        Writer.write(result_path +"queries_postgres.txt",queries)
 
         self.conn.execute(queries)
 

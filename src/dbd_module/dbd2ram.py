@@ -1,24 +1,22 @@
-import configparser
-import errno
-import os
 import sqlite3
-import uuid
+import pyodbc
 
 from ram_module import Schema, IndexDetail, ConstraintDetail, Index, Constraint, Field, Table, Domain
+from utils import ParseError
 
 
-class DBDownoader:
+class DBDownloader:
     """
     Downloading data to xml from sqlite database
     Data represents as map<column_name,value>
     """
-    def __init__(self, config_file, db_path):
-        self.config = configparser.ConfigParser()
-        self.config.read(config_file, 'utf-8')
-        self.conn = sqlite3.connect(db_path)
+    def __init__(self, queries, db_path, db_url):
+        self.config = queries
 
         if db_path:
             self.conn = sqlite3.connect(db_path)
+        if db_url:
+            self.conn = pyodbc.connect(db_url)
 
         self.cursor = self.conn.cursor()
 
@@ -41,42 +39,42 @@ class DBDownoader:
         Download schema as map
         :return:
         """
-        query = self.config.get('DOWNLOADING', 'schema')
+        query = self.config.get_schemas
         self.cursor.execute(query)
         return self._get_result()
 
     def load_domains(self):
-        query = self.config.get('DOWNLOADING', 'domain')
+        query = self.config.get_domains
         self.cursor.execute(query)
         return self._get_result()
 
     def load_tables(self):
-        query = self.config.get('DOWNLOADING', 'table')
+        query = self.config.get_tables
         self.cursor.execute(query)
         return self._get_result()
 
     def load_fields(self):
-        query = self.config.get('DOWNLOADING', 'field')
+        query = self.config.get_fields
         self.cursor.execute(query)
         return self._get_result()
 
     def load_constraints(self):
-        query = self.config.get('DOWNLOADING', 'constraint')
+        query = self.config.get_constraints
         self.cursor.execute(query)
         return self._get_result()
 
     def load_index(self):
-        query = self.config.get('DOWNLOADING', 'index')
+        query = self.config.get_indices
         self.cursor.execute(query)
         return self._get_result()
 
     def load_constraint_details(self):
-        query = self.config.get('DOWNLOADING', 'constraint_detail')
+        query = self.config.get_constraint_details
         self.cursor.execute(query)
         return self._get_result()
 
     def load_index_details(self):
-        query = self.config.get('DOWNLOADING', 'index_detail')
+        query = self.config.get_index_details
         self.cursor.execute(query)
         return self._get_result()
 
@@ -114,7 +112,7 @@ class DBDownoader:
                 continue
             tables[table_id].constraints.append(constraint)
             constraints[constraint_id] = constraint
-            if (constraint.reference in tables.keys()):
+            if constraint.reference in tables.keys():
                 constraint.reference = tables[constraint.reference].name;
 
 
@@ -145,6 +143,7 @@ class DBDownoader:
 
     def create_schema(self, schema_row):
         schema = Schema()
+        schema_id = None
         for attr in schema_row:
             if attr == 'name':
                 schema.name = schema_row[attr]
@@ -157,7 +156,7 @@ class DBDownoader:
             elif attr == 'id':
                 schema_id = schema_row[attr]
             else:
-                raise Exception("Unsupported attribute")
+                raise ParseError("Unsupported attribute {}".format(attr), self)
         return schema, schema_id
 
     def create_domain(self,attr_dict):
@@ -197,7 +196,7 @@ class DBDownoader:
             elif attr == 'id':
                 domain_id = attr_dict[attr]
             else:
-                raise Exception("Unsupported attribute")
+                raise ParseError("Unsupported attribute {}".format(attr),self)
         return domain, domain_id
 
     def create_table(self,attr_dict):
@@ -228,7 +227,7 @@ class DBDownoader:
             elif attr == 'id':
                 table_id = attr_dict[attr]
             else:
-                raise Exception("Unsupported attribute")
+                raise ParseError("Unsupported attribute {}".format(attr),self)
         return table, table_id, schema_id
 
     def create_field(self,attr_dict):
@@ -267,7 +266,7 @@ class DBDownoader:
             elif attr == 'table_id':
                 table_id = attr_dict[attr]
             else:
-                raise Exception("Unsupported attribute")
+                raise ParseError("Unsupported attribute {}".format(attr),self)
         return field, field_id, table_id
 
     def create_constraint(self,attr_dict):
@@ -303,7 +302,7 @@ class DBDownoader:
             elif attr == 'table_id':
                 table_id = attr_dict[attr]
             else:
-                raise Exception("Unsupported attribute " + attr)
+                raise ParseError("Unsupported attribute {}".format(attr),self)
         return constraint, constraint_id, table_id
 
     def create_index(self,attr_dict):
@@ -335,7 +334,7 @@ class DBDownoader:
             elif attr == 'table_id':
                 table_id = attr_dict[attr]
             else:
-                raise Exception("Unsupported attribute")
+                raise ParseError("Unsupported attribute {}".format(attr),self)
         return index, index_id, table_id
 
     def create_constraint_detail(self,attr_dict):
@@ -352,7 +351,7 @@ class DBDownoader:
             elif attr == 'constraint_id':
                 constraint_id = attr_dict[attr]
             else:
-                raise Exception("Unsupported attribute")
+                raise ParseError("Unsupported attribute {}".format(attr),self)
         return detail, detail_id, constraint_id
 
     def create_index_detail(self,attr_dict):
@@ -373,6 +372,6 @@ class DBDownoader:
             elif attr == 'index_id':
                 index_id = attr_dict[attr]
             else:
-                raise Exception("Unsupported attribute")
+                raise ParseError("Unsupported attribute {}".format(attr),self)
         return detail, detail_id, index_id
 

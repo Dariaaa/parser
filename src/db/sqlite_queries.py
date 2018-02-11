@@ -1,20 +1,15 @@
-########################################################################################################################
 
-[CREATE]
-[TEMP]
-########################################################################################################################
-
-temp_rel_domain_datatype:
+temp_rel_domain_datatype = """
     CREATE TABLE dbd$tmpdatatype
         (domain_name varchar NOT NULL
         ,datatype_name varchar NOT NULL)
-
-temp_rel_constraint_table:
+"""
+temp_rel_constraint_table = """
     CREATE TABLE dbd$tmpconsttable
         (constraint_id integer,
         table_name varchar)
-
-update_rel_constraints_table:
+"""
+update_rel_constraints_table = """
 
     UPDATE dbd$constraints SET
         reference = (
@@ -22,16 +17,11 @@ update_rel_constraints_table:
         JOIN dbd$tmpconsttable t_t
         ON (t.name = t_t.table_name)
         WHERE dbd$constraints.id = t_t.constraint_id)
+"""
 
-drop_rel_constraints_table:
-    DROP table dbd$tmpconsttable
-########################################################################################################################
+drop_rel_constraints_table = "DROP table dbd$tmpconsttable"
 
-[INSERT]
-
-########################################################################################################################
-
-tmp_const_tabl:
+tmp_const_table = """
     INSERT INTO dbd$tmpconsttable (
         constraint_id,
         table_name
@@ -39,8 +29,8 @@ tmp_const_tabl:
         :constraint_id,
         :table_name
     )
-
-schema:
+"""
+insert_schema ="""
     INSERT INTO dbd$schemas (
          name
         ,fulltext_engine
@@ -53,16 +43,16 @@ schema:
         ,:version
         ,:description
     )
+"""
 
-
-add_rel_to_temp:
+add_rel_to_temp = """
     INSERT INTO dbd$tmpdatatype
         VALUES(
         :domain_name
         ,:datatype_name)
 
-
-domain :
+"""
+insert_domain  = """
     INSERT INTO dbd$domains (
         name
         ,description
@@ -97,8 +87,8 @@ domain :
         ,:data_type_id
         ,:uuid
     )
-
-table :
+"""
+insert_table  = """
     INSERT INTO dbd$tables (
          schema_id
         ,name
@@ -121,8 +111,8 @@ table :
         ,:means
         ,:uuid
     )
-
-field:
+"""
+insert_field = """
      INSERT INTO dbd$fields (
              table_id
             ,position
@@ -155,8 +145,8 @@ field:
         ,:required
         ,:uuid
      )
-
-constraint:
+"""
+insert_constraint ="""
      INSERT INTO dbd$constraints (
              table_id
             ,name
@@ -179,8 +169,8 @@ constraint:
             ,:expression
             ,:uuid
      )
-
-constraint_detail:
+"""
+insert_constraint_detail = """
     INSERT INTO dbd$constraint_details (
          constraint_id
         ,position
@@ -191,8 +181,8 @@ constraint_detail:
         ,:position
         ,:field_id
     )
-
-index:
+"""
+insert_index ="""
     INSERT INTO dbd$indices (
          table_id
         ,name
@@ -207,8 +197,9 @@ index:
         ,:kind
         ,:uuid
     )
+"""
 
-index_detail:
+insert_index_detail = """
     INSERT INTO dbd$index_details (
          index_id
         ,position
@@ -223,43 +214,29 @@ index_detail:
         ,:expression
         ,:descend
     )
-########################################################################################################################
+"""
 
-[UPDATE]
-
-########################################################################################################################
-
-update_unique_key:
+update_unique_key ="""
     UPDATE dbd$constraints
     SET unique_key_id = :id
+"""
 
-########################################################################################################################
-
-[SELECT]
-
-########################################################################################################################
-
-get_schema_id:
+get_schema_id = """
     SELECT id,name FROM dbd$schemas
         WHERE name = :name
+"""
 
-
-get_domains_id:
+get_domains_id = """
     SELECT id,name FROM dbd$domains
-
-get_fields_id:
+"""
+get_fields_id = """
     SELECT id,name FROM dbd$fields
-
-get_tables_id:
+"""
+get_tables_id = """
     SELECT id,name FROM dbd$tables
+"""
 
-########################################################################################################################
-
-[DOWNLOADING]
-
-########################################################################################################################
-
-schema:
+get_schemas = """
     SELECT
          s.id
         ,s.name
@@ -268,8 +245,8 @@ schema:
         ,s.description
     FROM dbd$schemas AS s
     ORDER BY s.id
-
-domain :
+"""
+get_domains ="""
     SELECT
          dom.id
         ,dom.name
@@ -290,8 +267,8 @@ domain :
     JOIN dbd$data_types AS type
         ON dom.data_type_id = type.type_id
         ORDER BY dom.name
-
-table :
+"""
+get_tables ="""
     SELECT
          tab.id
         ,tab.schema_id
@@ -303,9 +280,9 @@ table :
         ,tab.temporal_mode
         ,tab.means
     FROM dbd$tables  AS tab
+"""
 
-
-field :
+get_fields = """
     SELECT
          field.id
         ,field.table_id
@@ -324,8 +301,8 @@ field :
     JOIN dbd$domains AS dom
         ON field.domain_id = dom.id
     ORDER BY field.position
-
-constraint:
+"""
+get_constraints="""
    SELECT
          con.id
         ,tab.id AS table_id
@@ -339,9 +316,9 @@ constraint:
     FROM dbd$constraints AS con
     JOIN dbd$tables  AS tab
         ON con.table_id = tab.id
+"""
 
-
-constraint_detail:
+get_constraint_details = """
     SELECT
          detail.id
         ,detail.constraint_id
@@ -350,8 +327,8 @@ constraint_detail:
     JOIN dbd$fields             AS field
         ON detail.field_id = field.id
     ORDER BY detail.position
-
-index:
+"""
+get_indices = """
     SELECT
          ind.id
         ,ind.table_id
@@ -359,8 +336,8 @@ index:
         ,ind.local
         ,ind.kind
     FROM dbd$indices AS ind
-
-index_detail:
+"""
+get_index_details = """
     SELECT
          detail.id
         ,detail.index_id
@@ -371,4 +348,4 @@ index_detail:
     JOIN dbd$fields        AS field
         ON detail.field_id = field.id
     ORDER BY detail.position
-
+"""

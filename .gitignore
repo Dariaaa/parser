@@ -1,7 +1,12 @@
-.idea/
+.idea
 src/__pycache__/
+__pycache__/
 src/ram_module/__pycache__/
 src/dbd_module/__pycache__/
 src/xml_module/__pycache__/
+src/db/__pycache__/
+src/utils/__pycache__/
 src/db/test_db.db
 src/resources
+src/result
+src/test/result

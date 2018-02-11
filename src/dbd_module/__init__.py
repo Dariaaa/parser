@@ -1,1 +1,1 @@
-from .dbd2ram import DBDownoader
+from .dbd2ram import DBDownloader

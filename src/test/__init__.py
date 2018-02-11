@@ -1,1 +1,1 @@
-from .test_parsing import ParsingTest
+from .test import ParsingTest

@@ -285,7 +285,7 @@ class Parser:
 
             for detail_node in item.childNodes:
                 if detail_node.tagName != 'item':
-                    raise Exception()
+                    raise ParseError("item not found")
                 detail = self._create_constraint_detail(detail_node._attrs)
                 constraint.details.append(detail)
 
