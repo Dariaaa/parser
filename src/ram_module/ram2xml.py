@@ -1,4 +1,4 @@
-from utils import ParseError, ItemNotFoundException
+from utils.exceptions import ParseError, ItemNotFoundException
 from utils import minidom_fixed as dom
 from utils.writer import Writer
 

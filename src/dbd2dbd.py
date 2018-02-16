@@ -1,8 +1,9 @@
-from db import mssql_url, mssql_queries
-from db.config import result_path
-from dbd_module import DBDownloader
-from ram_module import Converter, DBInitialisator
-from utils import ItemNotFoundException
+from db import mssql_queries
+from db.config import result_path, mssql_url
+from dbd_module.dbd2ram import DBDownloader
+from ram_module.ram2dbd_postgres import DBInitialisator
+from ram_module.ram2xml import Converter
+from utils.exceptions import ItemNotFoundException
 
 db_name = "Northwind"
 

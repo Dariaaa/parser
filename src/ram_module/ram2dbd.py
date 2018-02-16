@@ -1,4 +1,3 @@
-import configparser
 import errno
 import os
 import sqlite3

@@ -1,8 +1,8 @@
 import sqlite3
 import pyodbc
 
-from ram_module import Schema, IndexDetail, ConstraintDetail, Index, Constraint, Field, Table, Domain
-from utils import ParseError
+from ram_module.ram_structure import Schema, IndexDetail, ConstraintDetail, Index, Constraint, Field, Table, Domain
+from utils.exceptions import ParseError
 
 
 class DBDownloader:

@@ -1,10 +1,10 @@
 import postgresql
 
 from db.config import postgressql_url, result_path
-from ram_module import Schema,Domain,Table,Field,\
+from ram_module.ram_structure import Schema,Domain,Table,Field,\
     Constraint,Index
 from db.postgres_util import get_type_in_postgres
-from utils import TypeNotFoundException
+from utils.exceptions import TypeNotFoundException
 from utils.writer import Writer
 
 
