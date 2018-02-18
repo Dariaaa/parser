@@ -158,7 +158,7 @@ class DBUploader:
             'table_id': table_id,
             'position': field_position,
             'name': field.name,
-            'russian_short_name': field.rname,
+            'russian_short_name': field.rname if field.rname is not None else "",
             'description': field.descr,
             'domain_id': domain_id,
             'can_input': field.input,
