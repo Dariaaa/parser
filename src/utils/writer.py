@@ -7,6 +7,6 @@ class Writer:
             text_file.write(text)
     @staticmethod
     def write_xml(xml_path,xml):
-        file = open(xml_path, 'w', "utf8")
+        file = open(xml_path, 'w', encoding='utf8')
         xml.writexml(file, indent="  ", addindent="  ", newl='\n')
         file.close()

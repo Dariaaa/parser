@@ -23,6 +23,7 @@ class DBInitialisator:
         self.conn.close()
 
     def create_database(self, db_name):
+        self.db_name = db_name
         self.conn.execute('DROP DATABASE IF EXISTS ' + db_name)
         self.conn.execute('CREATE DATABASE ' + db_name)
         self.conn.close()
@@ -97,9 +98,8 @@ class DBInitialisator:
                     schema.name,table.name,', '.join(details))
 
 
-    def start(self, database_name:str, schema:Schema):
-        self.create_database(database_name)
 
+    def create(self, schema:Schema):
         scripts = []
 
         scripts.append('BEGIN TRANSACTION;')
@@ -128,8 +128,8 @@ class DBInitialisator:
 
         queries = '\n'.join(scripts)
 
-        Writer.write(result_path +"queries_postgres.txt",queries)
+        Writer.write(result_path +self.db_name +".ddl",queries)
 
-        self.conn.execute(queries)
+        # self.conn.execute(queries)
 
 
