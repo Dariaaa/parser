@@ -3,9 +3,13 @@
 # структура которой определяется метаданными, переданными в качестве аргумента.
 import argparse
 
+import postgresql
+
 from db import sqlite_queries
+from db.config import result_path, postgressql_url
 from dbd_module.dbd2ram import DBDownloader
 from ram_module.ram2dbd_postgres import DBInitialisator
+from utils.writer import Writer
 from xml_module.xml2ram import Parser
 
 parser = argparse.ArgumentParser(description='CREATING EMPTY POSTGRESQL DATABASE')
@@ -35,10 +39,24 @@ elif db:
     db_name = arr[arr.__len__()-1]
 
 pg_init = DBInitialisator()
-pg_init.create_database(db_name)
+
+url = postgressql_url
+conn = postgresql.open(url)
+
+conn.execute('DROP DATABASE IF EXISTS ' + db_name)
+conn.execute('CREATE DATABASE ' + db_name)
+conn.close()
+conn = postgresql.open(url + '/' + db_name.lower())
+
 
 for schema in schemas.values():
-    pg_init.create(schema)
+    ddl = pg_init.generate_ddl(schema) # generate ddl instructions
+    conn.execute(ddl)
+    print("schema '{}' created".format(schema.name))
+    # Writer.write(result_path + db_name + ".ddl", ddl)
+
+conn.close()
+
 
 
 

@@ -5,29 +5,44 @@ from ram_module.ram_structure import Schema,Domain,Table,Field,\
     Constraint,Index
 from db.postgres_util import get_type_in_postgres
 from utils.exceptions import TypeNotFoundException
-from utils.writer import Writer
-
 
 class DBInitialisator:
     """
 
-        Connect and create empty postgresql database
+        Generate ddl instructions to create postgresql database
 
     """
-    def __init__(self):
-        self.url = postgressql_url
-        self.conn = postgresql.open(self.url)
 
+    def generate_ddl(self, schema: Schema):
+        scripts = []
 
-    def __exit__(self):
-        self.conn.close()
+        scripts.append('BEGIN TRANSACTION;')
+        scripts.append(self.create_schema_ddl(schema))
+        scripts.append('\n'.join([
+            self.create_domain_ddl(d, schema)
+            for d in schema.domains
+        ]))
 
-    def create_database(self, db_name):
-        self.db_name = db_name
-        self.conn.execute('DROP DATABASE IF EXISTS ' + db_name)
-        self.conn.execute('CREATE DATABASE ' + db_name)
-        self.conn.close()
-        self.conn = postgresql.open(self.url + '/' + db_name.lower())
+        foreign = []
+
+        for table in schema.tables:
+            scripts.append(self.create_table_ddl(table, schema))
+
+            for index in table.indexes:
+                scripts.append(self.create_index_ddl(index, table, schema))
+
+            for constraint in table.constraints:
+                if constraint.kind.lower() == 'foreign':
+                    foreign.append(self.create_constraint_ddl(constraint, table, schema))
+                else:
+                    scripts.append(self.create_constraint_ddl(constraint, table, schema))
+
+        scripts.append('\n'.join(foreign))
+        scripts.append('COMMIT;')
+
+        queries = '\n'.join(scripts)
+
+        return queries
 
 
     def create_schema_ddl(self,schema: Schema):
@@ -97,39 +112,5 @@ class DBInitialisator:
             .format('"' + index.name + table.name + '"' if index.name else '',
                     schema.name,table.name,', '.join(details))
 
-
-
-    def create(self, schema:Schema):
-        scripts = []
-
-        scripts.append('BEGIN TRANSACTION;')
-        scripts.append(self.create_schema_ddl(schema))
-        scripts.append('\n'.join([
-            self.create_domain_ddl(d,schema)
-            for d in schema.domains
-        ]))
-
-        foreign = []
-
-        for table in schema.tables:
-            scripts.append(self.create_table_ddl(table, schema))
-
-            for index in table.indexes:
-                scripts.append(self.create_index_ddl(index,table,schema))
-
-            for constraint in table.constraints:
-                if constraint.kind.lower() == 'foreign':
-                    foreign.append(self.create_constraint_ddl(constraint,table,schema))
-                else:
-                    scripts.append(self.create_constraint_ddl(constraint,table,schema))
-
-        scripts.append('\n'.join(foreign))
-        scripts.append('COMMIT;')
-
-        queries = '\n'.join(scripts)
-
-        Writer.write(result_path +self.db_name +".ddl",queries)
-
-        # self.conn.execute(queries)
 
 
