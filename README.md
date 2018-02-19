@@ -47,4 +47,5 @@ modules that were implemented:
 2. a мodule of converting from object representation of database to text representation (`ram2xml`)
 3. a мodule of uploading a RAM representation to the SQLite database (`ram2dbd`)
 4. a module of loading the DBD representation and converting it into a RAM representation (`dbd2ram`)
-5. a module of uploading from RAM representation of database to PostgreSQL database (`ram2dbd_postgres`)
+5. a module of loading metadata from mssql db and creating ddl instructions and uploading this metadata to sqlite db; transfering data from mssql db to postgres sql db (`mssql2pg`)
+6. a module of loading metadata from db or xdb file and creating empty postgresql db (`init_pgdb`)
