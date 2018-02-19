@@ -18,10 +18,9 @@ class DBInitialisator:
 
         scripts.append('BEGIN TRANSACTION;')
         scripts.append(self.create_schema_ddl(schema))
-        scripts.append('\n'.join([
-            self.create_domain_ddl(d, schema)
-            for d in schema.domains
-        ]))
+        for d in schema.domains.values():
+            ddl = self.create_domain_ddl(d, schema)
+            scripts.append(ddl)
 
         foreign = []
 
@@ -40,10 +39,15 @@ class DBInitialisator:
         scripts.append('\n'.join(foreign))
         scripts.append('COMMIT;')
 
-        queries = '\n'.join(scripts)
+        # queries = '\n'.join(scripts)
 
-        return queries
+        return scripts
 
+    def drop_database(self,db_name):
+        return """DROP DATABASE IF EXISTS {};\n""".format(db_name)
+
+    def create_database_ddl(self,db_name):
+        return """CREATE DATABASE {};""".format(db_name)
 
     def create_schema_ddl(self,schema: Schema):
         return "CREATE SCHEMA {};".format(schema.name)
@@ -53,6 +57,7 @@ class DBInitialisator:
             ddl =  """CREATE DOMAIN {}."{}" AS {}; """\
                 .format(schema.name, domain.name, get_type_in_postgres(domain))
         except TypeNotFoundException:
+            print(domain.name + " " + domain.type)
             return ''
 
         if domain.descr:

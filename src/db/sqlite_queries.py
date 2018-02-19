@@ -251,7 +251,8 @@ get_domains ="""
          dom.id
         ,dom.name
         ,dom.description
-        ,type.type_id    AS data_type_name
+        --,type.type_id    AS data_type_name
+        ,dom.data_type_id
         ,dom.length
         ,dom.char_length
         ,dom.precision
@@ -264,8 +265,8 @@ get_domains ="""
         ,dom.summable
         ,dom.case_sensitive
     FROM dbd$domains    AS dom
-    JOIN dbd$data_types AS type
-        ON dom.data_type_id = type.type_id
+    -- JOIN dbd$data_types AS type
+  --     ON lower(dom.data_type_id) = lower(type.type_id)
         ORDER BY dom.name
 """
 get_tables ="""

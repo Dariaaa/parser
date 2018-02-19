@@ -5,11 +5,17 @@ repository contains implementations tasks on the subject "collective development
 
 ```
 src
-  |
-  |   dbd2dbd.py - loading from mssql db and uploading to postgresql db
+  │   mssql2pg.py - loading metadata from mssql db and creating ddl instructions 
+  │                 and uploading this metadata to sqlite db;
+  │                 transfering data from mssql db to postgres sql db 
+  │                  
+  │   init_pgdb.py - loading metadata from db or xdb file and uploading to postgresql db
   │   dbd2xml.py - loading from sqlite db and write to xml file
   │   xml2dbd.py - parsing from xml file and uploading to sqite db
-  │
+  │ 
+  ├───data_transfering
+  │       data_transfering.py   - transfering data from mssql db to postgresql db 
+  │ 
   ├───db
   │       config.py             - contains url's and path's which uses in program
   │       mssql_queries.py      - contains sql queries for mssql database

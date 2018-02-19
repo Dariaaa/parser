@@ -91,11 +91,12 @@ class DBDownloader:
             schemas[schema_id].tables.append(table)
 
         domains = {}
-        for row in self.load_domains():
+        l_d = self.load_domains()
+        for row in l_d:
             domain, domain_id = self.create_domain(row)
             domains[domain_id] = domain
-            for schema in [schema for schema in schemas.values() if len(schema.tables) > 0]:
-                schema.domains.append(domain)
+        for schema in [schema for schema in schemas.values() if len(schema.tables) > 0]:
+            schema.domains = domains
 
         fields = {}
         for row in self.load_fields():
@@ -163,11 +164,12 @@ class DBDownloader:
         domain = Domain()
 
         domain_id = None
-
         for attr in attr_dict:
             if attr == 'name':
                 domain.name = attr_dict[attr]
             elif attr == 'data_type_name':
+                domain.type = attr_dict[attr]
+            elif attr == 'data_type_id':
                 domain.type = attr_dict[attr]
             elif attr == 'align':
                 domain.align = attr_dict[attr]
