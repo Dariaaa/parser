@@ -33,11 +33,10 @@ class DataTransfering:
             for table in schema.tables:
                 self.cursor.execute(self.select_query(schema,table))
                 rows = self.cursor.fetchall()
-                query = 'BEGIN TRANSACTION;\n'
+                query = ''
                 for row in rows:
                     query+=self.insert_query(schema, table, row)
                     query+=";\n"
-                query += 'COMMIT TRANSACTION;'
                 self.pg_con.execute(query)
 
         self.pg_con.execute('COMMIT TRANSACTION;')

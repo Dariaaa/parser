@@ -30,20 +30,24 @@ schemas = downloader.load()
 ddl_generator = DBInitialisator()
 
 uploader = DBUploader(sqlite_queries,db_path + db_name + ".db")
-replicator = DataTransfering(db_name, mssql_url, pg_url + '/' + db_name.lower())
+data_transfer = DataTransfering(db_name, mssql_url, pg_url + '/' + db_name.lower())
 
 for schema in schemas.values():
     if len(schema.tables)>0:
-        #   generate ddl instructions and save
-        print("generating ddl")
-        ddl = ddl_generator.generate_ddl(schema)
-        Writer.write(ddl_path + schema.name + ".ddl", '\n'.join(ddl))
-        print("ddl saved to {}".format(ddl_path + schema.name + ".ddl"))
-        #   upload schema to sqlite database
         uploader.upload(schema)
         print("metatada {} database saved to {}".format(db_name, db_path + db_name + ".db"))
 
+print("opening {}.db".format(db_name))
 loader = DBDownloader(sqlite_queries, db_path + db_name + ".db", None)
 schemas = loader.load()
+print("schemas loaded")
 
-replicator.start(schemas)
+for schema in schemas.values():
+    print("generating ddl")
+    ddl = ddl_generator.generate_ddl(schema)
+    Writer.write(ddl_path + schema.name + ".ddl", '\n'.join(ddl))
+    print("ddl saved to {}".format(ddl_path + schema.name + ".ddl"))
+
+print("start data transferring")
+data_transfer.start(schemas)
+print("finish")
