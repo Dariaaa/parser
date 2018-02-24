@@ -33,7 +33,7 @@ class Converter:
         :param domains: Domain
         :return:
         """
-        for domain in domains:
+        for domain in domains.values():
             node = self.xml.createElement("domain")
             if domain.name is not None:
                 node.setAttribute("name", domain.name)
@@ -125,9 +125,20 @@ class Converter:
             if field.rname is not None:
                 node.setAttribute("rname", field.rname)
             if field.domain is not None:
-                node.setAttribute("domain", field.domain)
+                if type(field.domain) is str:
+                    node.setAttribute("domain", field.domain)
+                else:
+                    if field.domain.name:
+                        node.setAttribute("domain", field.domain.name)
+                    else:
+                        node.setAttribute("domain.char_length",field.domain.char_length)
+                        node.setAttribute("domain.precision", field.domain.precision)
+                        node.setAttribute("domain.scale", field.domain.scale)
+                        node.setAttribute("domain.type", field.domain.type)
             if field.descr is not None:
                 node.setAttribute("description", field.descr)
+
+
 
             properties = []
             if field.input:
@@ -166,6 +177,8 @@ class Converter:
                 node.setAttribute("kind", constraint.kind)
             if len(constraint.details) == 1:
                 node.setAttribute("items", constraint.details[0].value)
+            if constraint.items:
+                node.setAttribute("items", constraint.items)
             if constraint.reference is not None:
                 node.setAttribute("reference", str(constraint.reference))
             if constraint.expression is not None:
@@ -203,6 +216,9 @@ class Converter:
                 node.setAttribute('name', index.name)
             if len(index.details) == 1:
                 node.setAttribute('field', index.details[0].value)
+            if index.items:
+                node.setAttribute('items', index.items)
+
             props = []
 
             if index.local:
@@ -232,11 +248,11 @@ class Converter:
             raise ParseError("Schema not found", self)
         node = self.create_schema(schema)
         node.appendChild(self.xml.createElement("custom"))
-
-        domains = self.xml.createElement("domains")
-        for domain in self.create_domain(schema.domains):
-            domains.appendChild(domain)
-        node.appendChild(domains)
+        if schema.domains:
+            domains = self.xml.createElement("domains")
+            for domain in self.create_domain(schema.domains):
+                domains.appendChild(domain)
+            node.appendChild(domains)
 
         tables = self.xml.createElement("tables")
         for table in self.create_table(schema.tables):

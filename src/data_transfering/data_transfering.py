@@ -31,13 +31,20 @@ class DataTransfering:
         self.pg_con.execute('SET CONSTRAINTS ALL DEFERRED;')
         for schema in schemas.values():
             for table in schema.tables:
+                self.cursor.execute('BEGIN TRANSACTION;')
                 self.cursor.execute(self.select_query(schema,table))
                 rows = self.cursor.fetchall()
                 query = ''
                 for row in rows:
-                    query+=self.insert_query(schema, table, row)
-                    query+=";\n"
-                self.pg_con.execute(query)
+
+                    s ="alter table {}.\"{}\" disable trigger all;".format(schema.name,table.name)
+                    s += self.insert_query(schema, table, row) + ";\n"
+                    s+="alter table {}.\"{}\" enable trigger all;".format(schema.name,table.name)
+                    print(s)
+                    query+= s
+
+                    self.pg_con.execute(s)
+                self.cursor.execute('COMMIT;')
 
         self.pg_con.execute('COMMIT TRANSACTION;')
 
@@ -48,12 +55,13 @@ class DataTransfering:
             fields.append(_str)
         ss = ','.join(fields)
         query = 'SELECT {0} FROM [{1}].[{2}]'.format(ss,schema.name,table.name)
+        print(query)
         return query
 
     def insert_query(self,schema, table, values):
         fields = []
         for field in table.fields:
-            fields.append('"{}"'.format(field.name))
+            fields.append('{}'.format(field.name))
         _values = []
         for value in values:
             val = str(value).replace('\'','') if value is not None else 'NULL'
@@ -62,4 +70,5 @@ class DataTransfering:
             else:
                 _values.append('\'{}\''.format(val))
         query = 'INSERT INTO {}."{}" ({}) VALUES ({})'.format(schema.name, table.name,', '.join(fields),', '.join(_values))
+
         return query

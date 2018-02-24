@@ -57,6 +57,7 @@ class Index:
     def __init__(self):
         self.name = None
         self.kind = None
+        self.items = None
 
         self.local = False
 
@@ -78,7 +79,7 @@ class Constraint:
         self.reference = None
         self.has_value_edit = False
         self.cascading_delete = None
-
+        self.unique_key_id = None
         self.details = []
 
 class ConstraintDetail:

@@ -1,176 +1,78 @@
-get_schemas = """
-  SELECT
-         sch.schema_id   AS id
-        ,sch.name        AS name
-        ,NULL            AS fulltext_engine
-        ,NULL            AS version
-        ,NULL            AS description
-    FROM sys.schemas AS sch
-    ORDER BY sch.schema_id
-"""
-get_domains = """
-SELECT
-         ROW_NUMBER() OVER (
-							ORDER BY
-								 col.object_id
-								,col.column_id
-							)                    AS id
-        ,col.name
-			+ CAST(col.object_id AS VARCHAR(20)) AS name
-        ,NULL                                    AS description
-        ,type.name                               AS data_type_name
-        ,col.max_length                          AS length
-        ,col.max_length                          AS char_length
-        ,col.precision                           AS precision
-        ,col.scale                               AS scale
-        ,NULL                                    AS width
-        ,NULL                                    AS align
-        ,NULL                                    AS show_null
-        ,NULL                                    AS show_lead_nulls
-        ,NULL                                    AS thousands_separator
-        ,NULL                                    AS summable
-        ,NULL                                    AS case_sensitive
-    FROM sys.columns       AS col
-	INNER JOIN sys.types   AS type
-		ON col.system_type_id = type.system_type_id
-		AND col.user_type_id = type.user_type_id
-
-"""
 get_tables = """
-SELECT
-         tab.object_id AS id
-        ,tab.schema_id AS schema_id
-        ,tab.name	   AS name
-        ,NULL          AS description
-        ,NULL          AS can_add
-        ,NULL          AS can_edit
-        ,NULL          AS can_delete
-        ,NULL          AS temporal_mode
-        ,NULL          AS means
-    FROM sys.tables    AS tab
+select 
+            t.name, 
+            OBJECTPROPERTY(t.object_id, 'HasInsertTrigger') as addition, 
+            OBJECTPROPERTY(t.object_id, 'HasUpdateTrigger') as edition, 
+            t.temporal_type
+        from sys.tables as t
+        join sys.schemas as s
+        on t.schema_id = s.schema_id
+        where s.name = ?
 """
 get_fields = """
-SELECT
-         ROW_NUMBER() OVER (
-							ORDER BY
-								 field.object_id
-								,field.column_id
-							)                         AS id
-        ,field.object_id                              AS table_id
-        ,field.name                                   AS name
-        ,field.collation_name                         AS russian_short_name
-        ,NULL                                         AS description
-        ,field.name
-			+ CAST(field.object_id AS VARCHAR(20))    AS domain_name
-        ,NULL                                         AS can_input
-        ,NULL                                         AS can_edit
-        ,NULL                                         AS show_in_grid
-        ,NULL                                         AS show_in_details
-        ,NULL                                         AS is_mean
-        ,field.is_computed                            AS autocalculated
-        ,NULL                                         AS required
-    FROM sys.columns                                  AS field
-    ORDER BY field.column_id
-
+ select 
+            COLUMN_NAME as name, 
+            t.name as dom,
+            ORDINAL_POSITION as position, 
+            sc.is_identity as edit,
+            sc.is_hidden as show_in_grid,
+            sc.is_computed as autocalculated,
+            sc.is_nullable as required,
+            col.DATA_TYPE,
+            sc.scale,
+            sc.precision,
+            sc.max_length
+        from INFORMATION_SCHEMA.TABLES as tbl
+        left join INFORMATION_SCHEMA.COLUMNS as col
+        on col.TABLE_NAME = tbl.TABLE_NAME
+        left join sys.columns as sc
+        on sc.object_id = object_id(tbl.table_schema + '.' + tbl.table_name) and sc.NAME = col.COLUMN_NAME
+        left join sys.types as t
+        on col.DATA_TYPE = t.name
+        where tbl.TABLE_NAME = ?;
 """
-get_constraints = """
- SELECT
-         con.object_id        AS id
-        ,con.parent_object_id AS table_id
-        ,con.name			  AS name
-        ,'PRIMARY'            AS constraint_type
-        ,NULL                 AS reference
-        ,NULL                 AS unique_key_id
-        ,NULL                 AS has_value_edit
-        ,NULL                 AS cascading_delete
-        ,NULL                 AS expression
-    FROM sys.objects          AS con
-    WHERE con.type = 'PK'
-    UNION ALL
-    SELECT
-         con.object_id                         AS id
-        ,con.parent_object_id                  AS table_id
-        ,con.name			                   AS name
-        ,'FOREIGN'                             AS constraint_type
-        ,OBJECT_NAME(con.referenced_object_id) AS reference
-        ,NULL                                  AS unique_key_id
-        ,NULL                                  AS has_value_edit
-        ,NULL                                  AS cascading_delete
-        ,NULL                                  AS expression
-    FROM sys.foreign_keys AS con
-    """
-get_constraint_details = """
-SELECT
-         ROW_NUMBER() OVER (
-							ORDER BY
-								 det.constraint_id
-								,det.field_name
-							) AS id
-        ,det.constraint_id		                    AS constraint_id
-        ,det.field_name                             AS field_name
-    FROM (
-		SELECT
-			 con.object_id   AS constraint_id
-			,det.COLUMN_NAME AS field_name
-		FROM sys.objects								      AS con
-		INNER JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE AS det
-			ON con.name = det.CONSTRAINT_NAME
-		WHERE con.type = 'PK'
-		UNION ALL
-		SELECT
-			 con.object_id                                      AS constraint_id
-			,COL_NAME(det.parent_object_id, det.parent_column_id) AS field_name
-		FROM sys.foreign_keys              AS con
-		INNER JOIN sys.foreign_key_columns AS det
-			ON con.object_id = det.constraint_object_id
-	) AS det
+get_primary_keys = """
+ select 
+            kc.name, 
+            KCU.COLUMN_NAME as items, 
+            kc.unique_index_id as unique_key_index
+        from sys.tables as t
+        join sys.key_constraints as kc
+        on t.object_id = kc.parent_object_id
+        join INFORMATION_SCHEMA.KEY_COLUMN_USAGE as KCU
+        on KCU.CONSTRAINT_NAME = kc.name
+        where t.object_id = object_id(?);
+"""
+get_foreign_keys = """
+ select 
+            fk.name as name, 
+            ac.name as items, 
+            tt.name as reference, 
+            fk.delete_referential_action as cascading_delete
+        from sys.tables as t
+        join sys.all_columns as ac
+        on t.object_id = ac.object_id
+        join sys.foreign_key_columns as fkc
+        on ac.column_id = fkc.parent_column_id and t.object_id = fkc.parent_object_id
+        join sys.foreign_keys as fk
+        on fkc.constraint_object_id = fk.object_id
+        join sys.tables as tt
+        on tt.object_id = fk.referenced_object_id
+        where t.object_id = object_id(?);
 """
 get_indices = """
- SELECT
-         ROW_NUMBER() OVER (
-							ORDER BY
-								 ind.object_id
-								,ind.index_id
-							)                         AS id
-        ,ind.object_id                                AS table_id
-        ,ind.name                                     AS name
-        ,NULL                                         AS local
-        ,CASE
-			WHEN ind.is_unique = 1
-				THEN 'uniqueness'
-			ELSE NULL
-         END AS kind
-    FROM sys.indexes AS ind
+ select 
+            ind.name as index_name, 
+            ind.is_unique, 
+            fti.object_id as is_fulltext, 
+            c.name as field_name
+        from sys.indexes as ind
+        left join sys.fulltext_indexes as fti
+        on ind.object_id = fti.object_id
+        join sys.index_columns as ic
+        on ind.object_id = ic.object_id and ind.index_id = ic.index_id
+        join sys.columns as c
+        on ind.object_id = c.object_id and ic.column_id = c.column_id
+        where ind.object_id = OBJECT_ID(?);
 """
-get_index_details = """
- SELECT
-         ROW_NUMBER() OVER(
-							    ORDER BY
-								 detail.object_id
-								,detail.index_id
-							 )                            AS id
-        ,ind.id                                           AS index_id
-        ,col.name                                         AS field_name
-        ,NULL							                  AS expression
-        ,detail.is_descending_key                         AS descend
-    FROM
-	(
-		SELECT
-			ROW_NUMBER() OVER(
-							    ORDER BY
-								 ind.object_id
-								,ind.index_id
-							 )                            AS id
-			,ind.object_id                                AS table_id
-			,ind.index_id                                 AS index_id
-			,ind.name
-		FROM sys.indexes   AS ind
-    )                      AS ind
-	JOIN sys.index_columns AS detail
-		ON detail.object_id = ind.table_id
-		AND detail.index_id = ind.index_id
-	INNER JOIN sys.columns AS col
-		ON detail.column_id = col.column_id
-		AND detail.object_id = col.object_id
-    ORDER BY detail.column_id
-"""
+

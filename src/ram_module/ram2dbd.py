@@ -101,7 +101,7 @@ class DBUploader:
         :return:
         """
         query = self.config.insert_domain
-        for domain in schema.domains.values():
+        for domain in schema.domains:
             self.cursor.execute(query, {
                 'name': domain.name,
                 'description': domain.descr,

@@ -159,6 +159,7 @@ class Parser:
         xml_fields = xml.getElementsByTagName("field")
         for item in xml_fields:
             field = Field()
+            domain = Domain()
             attributes = item.attributes.items()
             for name, val in attributes:
                 if name.lower() == "name":
@@ -187,9 +188,17 @@ class Parser:
                             raise ParseError("Invalid format of propertiess: \"{}\"".format(val), self)
                 elif name.lower() == "description":
                     field.descr = val
+                elif name.lower() == "domain.char_length":
+                    domain.char_length = val
+                elif name.lower() == "domain.precision":
+                    domain.precision = val
+                elif name.lower() == "domain.scale":
+                    domain.scale = val
+                elif name.lower() == "domain.type":
+                    domain.type = val
                 else:
                     raise ParseError("Invalid attribute name \"{}\"".format(name), self)
-
+            field.domain = domain
             list.append(field)
 
         return list
@@ -216,8 +225,12 @@ class Parser:
                 if name.lower() == "field":
                     detail = IndexDetail()
                     detail.value = val
-                    tmp.details.append(detail)
 
+                    tmp.details.append(detail)
+                elif name.lower() == "items":
+                    tmp.items = val
+                elif name.lower() == "name":
+                    tmp.items = val
                 elif name.lower() == "props":
                     for prop in val.split(", "):
                         if prop == 'local':
@@ -265,6 +278,7 @@ class Parser:
                     detail = ConstraintDetail()
                     detail.value = val
                     constraint.details.append(detail)
+                    constraint.items = val
                 elif name.lower() == "props":
                     for prop in val.split(", "):
                         if prop == "has_value_edit":
