@@ -54,7 +54,7 @@ conn = postgresql.open(url + '/' + db_name.lower())
 
 for schema in schemas.values():
     print("generating ddl for schema {}".format(schema.name))
-    ddl = pg_init.generate_ddl(schema, True) # generate ddl instructions
+    ddl = pg_init.generate_ddl(schema) # generate ddl instructions
     Writer.write(ddl_path + db_name + ".ddl", '\n '.join(ddl))
     print("ddl saved to {}".format(ddl_path + db_name + ".ddl"))
     conn.execute('\n '.join(ddl))

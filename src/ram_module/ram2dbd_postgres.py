@@ -13,7 +13,7 @@ class DBInitialisator:
 
     """
 
-    def generate_ddl(self, schema: Schema, mssql):
+    def generate_ddl(self, schema: Schema):
         scripts = []
 
         scripts.append('BEGIN TRANSACTION;')
@@ -29,22 +29,15 @@ class DBInitialisator:
         for table in schema.tables:
             scripts.append(self.create_table_ddl(table, schema))
 
-            for index in table.indexes:
-                scripts.append(self.create_index_ddl(index, table, schema))
+            scripts.append(self.create_index_ddl(table, schema))
 
-            if mssql:
-                pr = self.create_primary(table,schema)
-                fr = self.create_foreign(table,schema)
-                if pr !='':
-                    primary.append(pr)
-                if fr !='':
-                    foreign.append(fr)
-            else:
-                for constraint in table.constraints:
-                    if constraint.kind.lower() == 'foreign':
-                        foreign.append(self.create_constraint_ddl(constraint, table, schema))
-                    else:
-                        scripts.append(self.create_constraint_ddl(constraint, table, schema))
+
+            pr = self.create_primary(table,schema)
+            fr = self.create_foreign(table,schema)
+            if pr !='':
+                primary.append(pr)
+            if fr !='':
+                foreign.append(fr)
 
         scripts.append("\n".join(primary))
         scripts.append('\n'.join(foreign))
@@ -113,58 +106,17 @@ class DBInitialisator:
                     .format(schema.name, table.name, "FOREIGN KEY", c.items, schema.name, c.reference)
         return f
 
-    def create_constraint_ddl(self,constraint:Constraint,table:Table,schema:Schema):
-        details = []
-        if constraint.details:
-            for det in constraint.details:
-                detail = r'"' + det.value + r'"'
-                details.append(detail)
-
-            if constraint.kind.lower() == 'primary':
-                str = """PRIMARY KEY ({})"""\
-                    .format(', '.join(details))
-            elif constraint.kind.lower() == 'foreign':
-                str = """FOREIGN KEY ({}) REFERENCES {}."{}" DEFERRABLE"""\
-                    .format(', '.join(details),schema.name,
-                        constraint.reference,constraint.name)
-            else: return ''
-
-            return """ALTER TABLE {}."{}" ADD {};"""\
-                .format(schema.name,table.name,str)
-        else:
-            query = """alter table {}."{}"\n add {} ({})\n"""\
-                .format(schema.name,table.name,constraint.kind + " KEY", constraint.items)
-
-            if constraint.kind.lower() == 'foreign':
-                query+="""references {}.\"{}\" """.format(schema.name,constraint.reference)
-            query +=";"
-            return query
-
-
-    def create_index_ddl(self,index: Index, table: Table, schema: Schema):
-        details = []
-        if index.details:
-            for det in index.details:
-                detail = '\"' + det.value + '\"'
-                if det.expression:
-                    detail += ' (' + det.expression + ')'
-                if not det.descend:
-                    detail += ' ASC'
-                else:
-                    detail += det.descend.upper()
-                details.append(detail)
-
-            if len(details) == 0:
-                return ''
-
-            return """CREATE INDEX {} ON {}."{}"({});"""\
-                .format('"' + index.name + table.name + '"' if index.name else '',
-                        schema.name,table.name,', '.join(details))
-        else:
-            unique = "UNIQUE " if index.kind =="uniqueness" else ""
-
-            return """CREATE {0} INDEX  ON {1}."{2}" ({3});""".format(
-                unique ,schema.name,table.name,index.items)
+    def create_index_ddl(self,table: Table, schema: Schema):
+        ind = []
+        ddl = ""
+        for i in table.indexes:
+            if i.kind == "uniqueness":
+                ind.append(i.items)
+            else:
+                ddl+="""CREATE INDEX  ON {}."{}" ({});\n""".format(
+                schema.name,table.name,i.items)
+        return """CREATE UNIQUE INDEX  ON {}."{}" ({});\n""".format(
+                schema.name,table.name,','.join(ind)) + ddl
 
 
 

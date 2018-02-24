@@ -35,7 +35,7 @@ converter = Converter()
 converter.convertRam2Xml(schema,result_path+'dbo.xml')
 
 ddl_generator = DBInitialisator()
-ddl = ddl_generator.generate_ddl(schema, True)
+ddl = ddl_generator.generate_ddl(schema)
 Writer.write(ddl_path + schema.name + ".ddl", '\n'.join(ddl))
 print("ddl saved to {}".format(ddl_path + schema.name + ".ddl"))
 
